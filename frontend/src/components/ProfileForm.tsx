@@ -39,13 +39,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
   const [percentInput, setPercentInput] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
-  useEffect(() => {
+    useEffect(() => {
     if (profile) {
       setFormData({
         email: profile.email,
-  start_date: (profile as any).start_date ?? '',
-  base_age: profile.base_age,
-  // retirement_start_age removed; we surface start_of_retirement_years instead
+        start_date: getDateDisplay((profile as any).start_date ?? ''),
+        base_age: profile.base_age,
         total_assets: profile.total_assets,
         fixed_assets: profile.fixed_assets,
         monthly_salary_net: profile.monthly_salary_net,
@@ -54,8 +53,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
         fixed_assets_growth_rate: profile.fixed_assets_growth_rate || 0.04,
         investment_tax_rate: profile.investment_tax_rate,
         investment_taxable_percentage: (profile as any).investment_taxable_percentage ?? 1.0,
-    end_of_salary_years: profile.end_of_salary_years,
-    government_retirement_start_years: profile.government_retirement_start_years,
+        end_of_salary_years: profile.end_of_salary_years,
+        government_retirement_start_years: profile.government_retirement_start_years,
         government_retirement_adjustment: profile.government_retirement_adjustment,
         monthly_expense_recurring: profile.monthly_expense_recurring,
         rent: profile.rent,
@@ -63,11 +62,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
         annual_inflation: profile.annual_inflation,
       });
     } else if (cloneData) {
-      // When cloning, use all the cloned data but keep email empty
       setFormData({
-        email: '',  // Force empty email for cloned profiles
+        email: '',
         base_age: cloneData.base_age,
-        start_date: cloneData.start_date ?? '',
+        start_date: getDateDisplay(cloneData.start_date ?? ''),
         total_assets: cloneData.total_assets,
         fixed_assets: cloneData.fixed_assets,
         monthly_salary_net: cloneData.monthly_salary_net,
@@ -87,11 +85,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     }
   }, [profile, cloneData]);
 
-  // Handle escape key to close modal
   const handleClose = useCallback(() => {
     if (hasUnsavedChanges) {
       const confirmed = window.confirm(
-        'You have unsaved changes. Are you sure you want to close without saving?'
+        'Você tem alterações não salvas. Tem certeza de que deseja fechar sem salvar?'
       );
       if (confirmed) {
         onCancel();
@@ -121,7 +118,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
       newErrors.email = 'Valid email is required';
     }
 
-  const baseAge = typeof formData.base_age === 'string' ? parseInt(formData.base_age || '0', 10) : formData.base_age;
+    const baseAge = typeof formData.base_age === 'string' ? parseInt(formData.base_age || '0', 10) : formData.base_age;
     if (isNaN(baseAge) || baseAge < 18 || baseAge > 100) {
       newErrors.base_age = 'Age must be between 18 and 100';
     }
@@ -154,7 +151,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
       newErrors.investment_taxable_percentage = 'Taxable investments % must be between 0% and 100%';
     }
 
-    // Timeline fields
     const eos = Number(formData.end_of_salary_years || 0);
     const sor = Number(formData.government_retirement_start_years || 0);
     if (isNaN(eos) || eos < 0 || eos > 100) {
@@ -191,22 +187,33 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
+
+    const processedFormData = { ...formData };
+    
+    // Convert date from DD/MM/YYYY to YYYY-MM-DD for backend
+    if ((processedFormData as any).start_date) {
+      const dateStr = (processedFormData as any).start_date;
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        const [day, month, year] = dateStr.split('/');
+        (processedFormData as any).start_date = `${year}-${month}-${day}`;
+      } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        // If it's neither DD/MM/YYYY nor YYYY-MM-DD, clear it
+        (processedFormData as any).start_date = '';
+      }
+    }
+
     if (!validateForm()) {
-      // Provide a clear top-level message so users notice validation failures
-      setFormError('Please fix the errors highlighted below before saving.');
-      // Log data to console for easier debugging
-      // eslint-disable-next-line no-console
-      console.log('ProfileForm submit blocked by validation', { formData, errors });
+      setFormError('Por favor, corrija os erros destacados abaixo antes de salvar.');
+      console.log('ProfileForm submit blocked by validation', { processedFormData, errors });
       return;
     }
 
     try {
-      await onSubmit(formData);
+      await onSubmit(processedFormData);
       setHasUnsavedChanges(false);
     } catch (err: any) {
       const message = err?.response?.data?.detail || err?.message || 'Failed to save profile';
       setFormError(message);
-      // eslint-disable-next-line no-console
       console.error('ProfileForm submit error', err);
     }
   };
@@ -216,13 +223,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     let newValue: any = value;
     
     if (type === 'number') {
-      // Allow clearing the input so users can delete leading zeros or clear the field
       if (value === '') {
         newValue = '';
       } else {
-        // Normalize comma to dot so users can type decimals with comma
         const normalized = value.replace(',', '.');
-        // Handle percentage fields - convert from percentage to decimal
         if (name === 'monthly_return_rate' || name === 'investment_tax_rate' || 
             name === 'government_retirement_adjustment' || name === 'annual_inflation' || name === 'investment_taxable_percentage' || name === 'fixed_assets_growth_rate') {
           const parsed = parseFloat(normalized);
@@ -237,17 +241,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     setFormData(prev => ({ ...prev, [name]: newValue }));
     setHasUnsavedChanges(true);
     
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleNumberFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Select all text if it's zero, so typing replaces it
     if (e.target.value === '0') {
       e.target.select();
-      // Also clear on first key press if it's a digit
       const handleFirstKey = (evt: KeyboardEvent) => {
         if (evt.key >= '0' && evt.key <= '9') {
           e.target.value = '';
@@ -258,25 +259,111 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     }
   };
 
-  const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    const formattedValue = formatBrazilianCurrencyInput(value);
-    const numericValue = parseBrazilianCurrency(formattedValue);
-    // Keep the user's formatted input so comma decimals are preserved while typing
-    setCurrencyInput(prev => ({ ...prev, [name]: formattedValue }));
+  // Helper function to convert DD/MM/YYYY to YYYY-MM-DD
+  const getDateISO = (displayDate: string): string => {
+    if (!displayDate) return '';
+    const match = displayDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (match) {
+      return `${match[3]}-${match[2]}-${match[1]}`;
+    }
+    return displayDate; // Return as-is if not complete
+  };
 
-    setFormData(prev => ({ ...prev, [name]: numericValue }));
+  const handleDateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const { key } = e;
+    
+    // Allow: backspace, delete, tab, escape, enter, arrows, home, end
+    if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) {
+      return;
+    }
+    
+    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(key.toLowerCase())) {
+      return;
+    }
+    
+    // Only allow numbers and slash
+    if (!/^[0-9/]$/.test(key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const value = input.value;
+    const oldValue = (formData as any).start_date || '';
+    
+    // Get only digits from both values
+    const oldDigits = oldValue.replace(/\D/g, '');
+    const newDigits = value.replace(/\D/g, '');
+    
+    // If digits haven't changed, user just clicked or moved cursor - don't process
+    if (oldDigits === newDigits) {
+      return;
+    }
+    
+    const cursorPosition = input.selectionStart || 0;
+    
+    // Limit to 8 digits
+    const limitedDigits = newDigits.slice(0, 8);
+    
+    // Format as DD/MM/YYYY
+    let formatted = limitedDigits;
+    if (limitedDigits.length >= 3) {
+      formatted = limitedDigits.slice(0, 2) + '/' + limitedDigits.slice(2);
+    }
+    if (limitedDigits.length >= 5) {
+      formatted = limitedDigits.slice(0, 2) + '/' + limitedDigits.slice(2, 4) + '/' + limitedDigits.slice(4);
+    }
+    
+    // Count digits before cursor in the user's input
+    let digitsBeforeCursor = 0;
+    for (let i = 0; i < cursorPosition && i < value.length; i++) {
+      if (/\d/.test(value[i])) {
+        digitsBeforeCursor++;
+      }
+    }
+    
+    // Find where cursor should be in formatted string (after the Nth digit)
+    let newCursorPosition = 0;
+    let digitsSeen = 0;
+    
+    for (let i = 0; i < formatted.length; i++) {
+      if (/\d/.test(formatted[i])) {
+        digitsSeen++;
+        if (digitsSeen === digitsBeforeCursor) {
+          // Cursor should be right after this digit
+          newCursorPosition = i + 1;
+          break;
+        }
+      }
+    }
+    
+    // If we've seen fewer digits than we want to be after, put cursor at end
+    if (digitsSeen < digitsBeforeCursor) {
+      newCursorPosition = formatted.length;
+    }
+    
+    // Special case: if cursor was at position 0, keep it at 0
+    if (digitsBeforeCursor === 0) {
+      newCursorPosition = 0;
+    }
+    
+    setFormData(prev => ({ ...prev, start_date: formatted } as any));
     setHasUnsavedChanges(true);
     
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+    if (errors.start_date) {
+      setErrors(prev => ({ ...prev, start_date: '' }));
     }
+    
+    // Restore cursor position after React updates
+    setTimeout(() => {
+      input.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
   };
 
   const formatNumberForInput = (amount: number): string => {
     if (amount === null || amount === undefined || isNaN(amount)) return '';
-    // Use pt-BR number formatting with up to 2 fraction digits
     const hasDecimals = Math.abs(amount % 1) > 0;
     return new Intl.NumberFormat('pt-BR', {
       minimumFractionDigits: hasDecimals ? 2 : 0,
@@ -284,14 +371,48 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     }).format(amount);
   };
 
+  const getDateDisplay = (dateString: string) => {
+    if (!dateString) return '';
+    
+    // If already in DD/MM/YYYY format, return as-is
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      return dateString;
+    }
+    
+    // If ISO format (YYYY-MM-DD), convert to DD/MM/YYYY
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split('-');
+      return `${day}/${month}/${year}`;
+    }
+    
+    return '';
+  };
+
   const getCurrencyDisplay = (name: string, numericValue: number) => {
     return currencyInput[name] ?? formatNumberForInput(numericValue ?? 0);
   };
 
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const formattedValue = formatBrazilianCurrencyInput(value);
+    const numericValue = parseBrazilianCurrency(formattedValue);
+    setCurrencyInput(prev => ({ ...prev, [name]: formattedValue }));
+
+    setFormData(prev => ({ ...prev, [name]: numericValue }));
+    setHasUnsavedChanges(true);
+    
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleCurrencyBlur = (name: string) => {
+    const numericValue = (formData as any)[name] ?? 0;
+    setCurrencyInput(prev => ({ ...prev, [name]: formatNumberForInput(numericValue) }));
+  };
+
   const handleCurrencyFocus = (e: React.FocusEvent<HTMLInputElement>, name: string) => {
-    // If there's already a raw value stored, keep it; otherwise populate with current formatted numeric value
     const current = currencyInput[name] ?? formatNumberForInput((formData as any)[name]);
-    // Select all text if it's just zeros, so typing replaces it
     if (current === '0' || current === '0,00' || current === '0.00' || current === '') {
       e.target.select();
     }
@@ -299,29 +420,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     setCurrencyInput(prev => ({ ...prev, [name]: prev[name] ?? toSet }));
   };
 
-  const handleCurrencyBlur = (name: string) => {
-    // Normalize the display to a standard formatted representation from the numeric value
-    const numericValue = (formData as any)[name] ?? 0;
-    setCurrencyInput(prev => ({ ...prev, [name]: formatNumberForInput(numericValue) }));
-  };
-
   const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    // Allow comma as decimal separator
-    // Keep the raw user input while typing to avoid forcing display changes
     setPercentInput(prev => ({ ...prev, [name]: value }));
 
     const normalized = value.replace(/,/g, '.');
-    // Parse and clamp to 2 decimal places to avoid floating point artifacts
     const parsed = parseFloat(normalized);
-    const clamped = isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100; // percentage e.g., 4.77
+    const clamped = isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
 
-    // Clamp per-field to valid ranges (percentages shown to user):
-    // - monthly_return_rate: 0..5
-    // - investment_tax_rate & investment_taxable_percentage: 0..100
-    // - government_retirement_adjustment: 0..10
-    // - annual_inflation: 0..20
-    // - fixed_assets_growth_rate: 0..20
     let bounded = clamped;
     if (name === 'monthly_return_rate') {
       bounded = Math.min(Math.max(bounded, 0), 5);
@@ -340,20 +446,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
   };
 
   const handlePercentageFocus = (e: React.FocusEvent<HTMLInputElement>, name: string) => {
-    // When focusing, keep the existing raw typed value if present, otherwise populate with formatted value
     const defaultVal = ('' + ((formData as any)[name] ?? 0) * 100);
     const formattedDefault = isNaN(parseFloat(defaultVal)) ? '' : (parseFloat(defaultVal).toFixed(2).replace('.', ','));
-    // Select all text if it's just zeros, so typing replaces it
     if (formattedDefault === '0,00' || formattedDefault === '0' || formattedDefault === '') {
       e.target.select();
     }
-    // If the field shows just zeros, clear it so typing replaces the zero
     const toSet = (formattedDefault === '0,00' || formattedDefault === '0') ? '' : formattedDefault;
     setPercentInput(prev => ({ ...prev, [name]: prev[name] ?? toSet }));
   };
 
   const handlePercentageBlur = (name: string) => {
-    // On blur, normalize the display to 2 decimal places
     const numericValue = (formData as any)[name] ?? 0;
     const display = isNaN(numericValue) ? '' : ((numericValue * 100).toFixed(2)).replace('.', ',');
     setPercentInput(prev => ({ ...prev, [name]: display }));
@@ -369,15 +471,18 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     <div className="profile-form-container" onClick={handleOverlayClick}>
       <div className="profile-form">
         <div className="profile-form-header">
-          <h2>
-            {profile ? 'Edit Profile' : cloneData ? 'Clone Profile' : 'Create New Profile'}
-            {hasUnsavedChanges && <span className="unsaved-indicator"> •</span>}
-          </h2>
+          <div>
+            <h2>
+              {profile ? 'Editar Perfil' : cloneData ? 'Clonar Perfil' : 'Criar Novo Perfil'}
+              {hasUnsavedChanges && <span className="unsaved-indicator"> •</span>}
+            </h2>
+            <p className="profile-form-subtitle">Atualize os detalhes do seu perfil de planejamento de aposentadoria</p>
+          </div>
           <button 
             className="close-button" 
             onClick={handleClose}
-            title="Close (Esc)"
-            aria-label="Close modal"
+            title="Fechar (Esc)"
+            aria-label="Fechar modal"
           >
             ×
           </button>
@@ -390,7 +495,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
         
         <form onSubmit={handleSubmit}>
           <div className="form-section">
-            <h3>👤 Profile Details</h3>
+            <h3>👤 Detalhes do Perfil</h3>
             <div className="form-grid">
               <div className="field-card">
                 <div className="form-group">
@@ -408,23 +513,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="start_date">Retirement Start Date</label>
+                  <label htmlFor="start_date">Data de Início da Aposentadoria</label>
                   <input
-                    type="date"
+                    type="text"
                     id="start_date"
                     name="start_date"
                     value={(formData as any).start_date || ''}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setFormData(prev => ({ ...prev, start_date: v } as any));
-                      setHasUnsavedChanges(true);
-                      if (errors.start_date) setErrors(prev => ({ ...prev, start_date: '' }));
-                    }}
+                    onChange={handleDateChange}
+                    onKeyDown={handleDateKeyDown}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="base_age">Current Age *</label>
+                  <label htmlFor="base_age">Idade Atual *</label>
                   <input
                     type="number"
                     id="base_age"
@@ -444,12 +547,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
           </div>
 
           <div className="form-section">
-            <h3>💰 Financial Overview</h3>
+            <h3>Ativos</h3>
+            <p className="section-description">Seus ativos atuais e propriedades</p>
             <div className="form-grid">
               <div className="field-card">
-                <h4>Assets</h4>
                 <div className="form-group">
-                  <label htmlFor="total_assets">Total Assets (R$)</label>
+                  <label htmlFor="total_assets">Ativos Totais (R$)</label>
                   <input
                     type="text"
                     id="total_assets"
@@ -465,7 +568,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="fixed_assets">Fixed Assets (R$)</label>
+                  <label htmlFor="fixed_assets">Ativos Fixos (R$)</label>
                   <input
                     type="text"
                     id="fixed_assets"
@@ -477,12 +580,37 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                     placeholder="0,00"
                   />
                 </div>
-              </div>
 
-              <div className="field-card">
-                <h4>Income</h4>
                 <div className="form-group">
-                  <label htmlFor="monthly_salary_net">Monthly Net Salary (R$)</label>
+                  <label htmlFor="fixed_assets_growth_rate">Taxa de Crescimento de Ativos Fixos (% anual)</label>
+                  <input
+                    type="text"
+                    id="fixed_assets_growth_rate"
+                    name="fixed_assets_growth_rate"
+                    value={percentInput['fixed_assets_growth_rate'] ?? (() => {
+                      const v = ((formData as any).fixed_assets_growth_rate ?? 0.04) * 100;
+                      return isNaN(v) ? '' : v.toFixed(2).replace('.', ',');
+                    })()}
+                    onChange={handlePercentageChange}
+                    onFocus={(e) => handlePercentageFocus(e, 'fixed_assets_growth_rate')}
+                    onBlur={() => handlePercentageBlur('fixed_assets_growth_rate')}
+                    placeholder="e.g., 4,0 for 4% growth"
+                    className={errors.fixed_assets_growth_rate ? 'error' : ''}
+                  />
+                  {errors.fixed_assets_growth_rate && <span className="error-message">{errors.fixed_assets_growth_rate}</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h3>Renda e Despesas</h3>
+            <p className="section-description">Suas fontes de renda e despesas mensais</p>
+            <div className="form-grid">
+              <div className="field-card">
+                <h4>Renda</h4>
+                <div className="form-group">
+                  <label htmlFor="monthly_salary_net">Salário Líquido Mensal (R$)</label>
                   <input
                     type="text"
                     id="monthly_salary_net"
@@ -498,7 +626,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="government_retirement_income">Government Pension (Monthly R$)</label>
+                  <label htmlFor="government_retirement_income">Aposentadoria do Governo (Mensal R$)</label>
                   <input
                     type="text"
                     id="government_retirement_income"
@@ -515,9 +643,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
               </div>
 
               <div className="field-card">
-                <h4>Expenses</h4>
+                <h4>Despesas</h4>
                 <div className="form-group">
-                  <label htmlFor="monthly_expense_recurring">Monthly Recurring Expenses (R$)</label>
+                  <label htmlFor="monthly_expense_recurring">Despesas Recorrentes Mensais (R$)</label>
                   <input
                     type="text"
                     id="monthly_expense_recurring"
@@ -533,7 +661,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="rent">Monthly Rent (R$)</label>
+                  <label htmlFor="rent">Aluguel Mensal (R$)</label>
                   <input
                     type="text"
                     id="rent"
@@ -549,7 +677,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="one_time_annual_expense">One-time Annual Expenses (R$)</label>
+                  <label htmlFor="one_time_annual_expense">Despesas Anuais Únicas (R$)</label>
                   <input
                     type="text"
                     id="one_time_annual_expense"
@@ -568,12 +696,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
           </div>
 
           <div className="form-section">
-            <h3>📊 Investment & Economic Strategy</h3>
+            <h3>📊 Investimento e Estratégia Econômica</h3>
             <div className="form-grid">
               <div className="field-card">
-                <h4>Investment</h4>
+                <h4>Investimento</h4>
                 <div className="form-group">
-                  <label htmlFor="monthly_return_rate">Monthly Return Rate (%) - Max 5%</label>
+                  <label htmlFor="monthly_return_rate">Taxa de Retorno Mensal (%) - Máx 5%</label>
                   <input
                     type="text"
                     id="monthly_return_rate"
@@ -592,7 +720,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="investment_tax_rate">Investment Tax Rate (%)</label>
+                  <label htmlFor="investment_tax_rate">Imposto sobre Investimento (%)</label>
                   <input
                     type="text"
                     id="investment_tax_rate"
@@ -611,7 +739,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="investment_taxable_percentage">Taxable Investments (%)</label>
+                  <label htmlFor="investment_taxable_percentage">Investimentos Tributáveis (%)</label>
                   <input
                     type="text"
                     id="investment_taxable_percentage"
@@ -630,7 +758,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="fixed_assets_growth_rate">Fixed Assets Growth Rate (% annual)</label>
+                  <label htmlFor="fixed_assets_growth_rate">Taxa de Crescimento de Ativos Fixos (% anual)</label>
                   <input
                     type="text"
                     id="fixed_assets_growth_rate"
@@ -650,9 +778,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
               </div>
 
               <div className="field-card">
-                <h4>Timeline</h4>
+                <h4>Linha do Tempo</h4>
                 <div className="form-group">
-                  <label htmlFor="government_retirement_start_years">Government Pension Start (years from start_date)</label>
+                  <label htmlFor="government_retirement_start_years">Início da Aposentadoria do Governo (anos)</label>
                   <input
                     type="number"
                     id="government_retirement_start_years"
@@ -673,7 +801,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="end_of_salary_years">End of Salary (years from now)</label>
+                  <label htmlFor="end_of_salary_years">Fim do Salário (anos)</label>
                   <input
                     type="number"
                     id="end_of_salary_years"
@@ -695,9 +823,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
               </div>
 
               <div className="field-card">
-                <h4>Economic Assumptions</h4>
+                <h4>Premissas Econômicas</h4>
                 <div className="form-group">
-                  <label htmlFor="government_retirement_adjustment">Government Pension COLA (% per year)</label>
+                  <label htmlFor="government_retirement_adjustment">Ajuste da Aposentadoria do Governo (% ao ano)</label>
                   <input
                     type="text"
                     id="government_retirement_adjustment"
@@ -716,7 +844,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="annual_inflation">Annual Inflation Rate (%)</label>
+                  <label htmlFor="annual_inflation">Taxa de Inflação Anual (%)</label>
                   <input
                     type="text"
                     id="annual_inflation"
@@ -739,10 +867,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
 
           <div className="form-actions">
             <button type="button" onClick={handleClose} className="btn btn-secondary">
-              Cancel
+              Cancelar
             </button>
             <button type="submit" className="btn btn-primary" disabled={isLoading}>
-              {isLoading ? 'Saving...' : (profile ? 'Update Profile' : cloneData ? 'Clone Profile' : 'Create Profile')}
+              {isLoading ? 'Salvando...' : (profile ? 'Atualizar Perfil' : cloneData ? 'Clonar Perfil' : 'Criar Perfil')}
             </button>
           </div>
         </form>

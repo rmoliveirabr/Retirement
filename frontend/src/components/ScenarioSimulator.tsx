@@ -1,201 +1,97 @@
 import React, { useState, useEffect } from 'react';
-import { Profile, ScenarioRequest, RetirementCalculation } from '../types';
-import { retirementApi, profileApi } from '../services/api';
-import { formatBrazilianCurrencyInput, parseBrazilianCurrency } from '../utils/currency';
+import { Profile, RetirementCalculation } from '../types';
+import { parseBrazilianCurrency, formatBrazilianCurrencyInput } from '../utils/currency';
+// formatBrazilianCurrency is not currently used but kept for future reference
 import './ScenarioSimulator.css';
 
 interface ScenarioSimulatorProps {
   profile: Profile;
-  originalCalculation: RetirementCalculation;
-  onScenarioCalculated: (calculation: RetirementCalculation) => void;
+  onClose: () => void;
+  onUpdateProfile: (updatedProfile: Profile) => void;
+  onCalculate: () => void;
+  originalCalculation?: RetirementCalculation;
+  onScenarioCalculated?: (calculation: RetirementCalculation) => void;
   onProfileUpdate: (updatedProfile: Profile) => void;
+  onCalculateScenario?: (profile: Profile, scenarioParams: any) => void;
+  onSaveProfileAndRecalculate?: (profile: Profile) => void;
 }
 
 const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   profile,
+  onClose,
+  onUpdateProfile,
+  onCalculate,
   originalCalculation,
   onScenarioCalculated,
   onProfileUpdate,
+  onCalculateScenario,
+  onSaveProfileAndRecalculate,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  
-  // Modal states
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  
-  // Input display states for Brazilian notation
-  const [currencyInput, setCurrencyInput] = useState<Record<string, string>>({});
-  const [percentInput, setPercentInput] = useState<Record<string, string>>({});
-  
-  // Scenario parameters (initialized from profile)
-  const [scenarioParams, setScenarioParams] = useState<Partial<ScenarioRequest>>({
-    total_assets: profile.total_assets,
-    fixed_assets: profile.fixed_assets,
-    monthly_salary_net: profile.monthly_salary_net,
-    government_retirement_income: profile.government_retirement_income,
-    monthly_return_rate: profile.monthly_return_rate,
-    fixed_assets_growth_rate: profile.fixed_assets_growth_rate,
-    investment_tax_rate: profile.investment_tax_rate,
-    end_of_salary_years: profile.end_of_salary_years,
-    government_retirement_start_years: profile.government_retirement_start_years,
-    monthly_expense_recurring: profile.monthly_expense_recurring,
-    rent: profile.rent,
-    one_time_annual_expense: profile.one_time_annual_expense,
-    annual_inflation: profile.annual_inflation,
+  const [activeTab, setActiveTab] = useState('simulator');
+  const [simulationParams, setSimulationParams] = useState({
+    totalAssets: profile.total_assets || 0,
+    fixedAssets: profile.fixed_assets || 0,
+    fixedAssetsGrowthRate: profile.fixed_assets_growth_rate || 0,
+    monthlyNetSalary: profile.monthly_salary_net || 0,
+    govPension: profile.government_retirement_income || 0,
+    yearsUntilSalaryEnds: profile.end_of_salary_years || 0,
+    yearsUntilGovRetirement: profile.government_retirement_start_years || 0,
+    monthlyExpenses: profile.monthly_expense_recurring || 0,
+    monthlyRent: profile.rent || 0,
+    oneTimeExpenses: profile.one_time_annual_expense || 0,
+    monthlyReturnRate: profile.monthly_return_rate || 0,
+    investmentTaxRate: profile.investment_tax_rate || 0,
+    annualInflation: profile.annual_inflation || 0,
   });
 
-  // Reset scenario when profile changes
-  useEffect(() => {
-    setScenarioParams({
-      total_assets: profile.total_assets,
-      fixed_assets: profile.fixed_assets,
-      monthly_salary_net: profile.monthly_salary_net,
-      government_retirement_income: profile.government_retirement_income,
-      monthly_return_rate: profile.monthly_return_rate,
-      fixed_assets_growth_rate: profile.fixed_assets_growth_rate,
-      investment_tax_rate: profile.investment_tax_rate,
-      end_of_salary_years: profile.end_of_salary_years,
-      government_retirement_start_years: profile.government_retirement_start_years,
-      monthly_expense_recurring: profile.monthly_expense_recurring,
-      rent: profile.rent,
-      one_time_annual_expense: profile.one_time_annual_expense,
-      annual_inflation: profile.annual_inflation,
-    });
-    setCurrencyInput({});
-    setPercentInput({});
-    setHasChanges(false);
-  }, [profile]);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
-  const handleCurrencyChange = (field: string, value: string) => {
+  // Currency and percentage input formatting state
+  const [currencyInput, setCurrencyInput] = useState<Record<string, string>>({});
+  const [percentInput, setPercentInput] = useState<Record<string, string>>({});
+
+  const initialParams = {
+    totalAssets: profile.total_assets || 0,
+    fixedAssets: profile.fixed_assets || 0,
+    fixedAssetsGrowthRate: profile.fixed_assets_growth_rate || 0,
+    monthlyNetSalary: profile.monthly_salary_net || 0,
+    govPension: profile.government_retirement_income || 0,
+    yearsUntilSalaryEnds: profile.end_of_salary_years || 0,
+    yearsUntilGovRetirement: profile.government_retirement_start_years || 0,
+    monthlyExpenses: profile.monthly_expense_recurring || 0,
+    monthlyRent: profile.rent || 0,
+    oneTimeExpenses: profile.one_time_annual_expense || 0,
+    monthlyReturnRate: profile.monthly_return_rate || 0,
+    investmentTaxRate: profile.investment_tax_rate || 0,
+    annualInflation: profile.annual_inflation || 0,
+  };
+
+  const handleInputChange = (field: string, value: string | number) => {
+    setSimulationParams(prev => ({
+      ...prev,
+      [field]: typeof value === 'string' ? parseFloat(value) || 0 : value
+    }));
+  };
+
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     const formattedValue = formatBrazilianCurrencyInput(value);
     const numericValue = parseBrazilianCurrency(formattedValue);
-    setCurrencyInput(prev => ({ ...prev, [field]: formattedValue }));
-    setScenarioParams(prev => ({ ...prev, [field]: numericValue }));
-    setHasChanges(true);
+    setCurrencyInput(prev => ({ ...prev, [name]: formattedValue }));
+    setSimulationParams(prev => ({ ...prev, [name]: numericValue }));
   };
 
-  const handlePercentageChange = (field: string, value: string) => {
-    setPercentInput(prev => ({ ...prev, [field]: value }));
+  const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPercentInput(prev => ({ ...prev, [name]: value }));
+
     const normalized = value.replace(/,/g, '.');
     const parsed = parseFloat(normalized);
-    const clamped = isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
-    
-    // Clamp to valid ranges
-    let bounded = clamped;
-    if (field === 'monthly_return_rate') {
-      bounded = Math.min(Math.max(bounded, 0), 5);
-    } else if (field === 'investment_tax_rate') {
-      bounded = Math.min(Math.max(bounded, 0), 100);
-    } else if (field === 'fixed_assets_growth_rate' || field === 'annual_inflation') {
-      bounded = Math.min(Math.max(bounded, 0), 20);
-    }
-    
-    const numericValue = bounded / 100;
-    setScenarioParams(prev => ({ ...prev, [field]: numericValue }));
-    setHasChanges(true);
-  };
+    const numericValue = isNaN(parsed) ? 0 : parsed / 100;
 
-  const handleIntegerChange = (field: string, value: string) => {
-    const parsed = parseInt(value) || 0;
-    setScenarioParams(prev => ({ ...prev, [field]: parsed }));
-    setHasChanges(true);
-  };
-
-  const handleIntegerFocus = (e: React.FocusEvent<HTMLInputElement>, field: string) => {
-    // Select all text if it's zero, so typing replaces it
-    if (e.target.value === '0') {
-      e.target.select();
-      // Also clear on first key press if it's a digit
-      const handleFirstKey = (evt: KeyboardEvent) => {
-        if (evt.key >= '0' && evt.key <= '9') {
-          e.target.value = '';
-          // Update state to empty so React is in sync
-          setScenarioParams(prev => ({ ...prev, [field]: '' as any }));
-        }
-        e.target.removeEventListener('keydown', handleFirstKey);
-      };
-      e.target.addEventListener('keydown', handleFirstKey, { once: true });
-    }
-  };
-
-  const handleRecalculate = async () => {
-    setIsCalculating(true);
-    try {
-      const request: ScenarioRequest = {
-        profile_id: profile.id,
-        expected_return_rate: originalCalculation.assumptions.expected_return_rate,
-        retirement_duration_years: originalCalculation.assumptions.retirement_duration_years,
-        target_age: originalCalculation.assumptions.target_age || 100,
-        ...scenarioParams,
-      };
-
-      const calculation = await retirementApi.calculateScenario(request);
-      onScenarioCalculated(calculation);
-    } catch (error) {
-      console.error('Error calculating scenario:', error);
-      setErrorMessage('Failed to calculate scenario. Please try again.');
-      setShowErrorModal(true);
-    } finally {
-      setIsCalculating(false);
-    }
-  };
-
-  const handleSaveToProfile = async () => {
-    setIsSaving(true);
-    setShowConfirmModal(false);
-    try {
-      // Build update object with only changed values
-      const updates: any = {};
-      Object.entries(scenarioParams).forEach(([key, value]) => {
-        if (value !== undefined && value !== (profile as any)[key]) {
-          updates[key] = value;
-        }
-      });
-
-      const updatedProfile = await profileApi.update(profile.id, updates);
-      onProfileUpdate(updatedProfile);
-      setHasChanges(false);
-      setShowSuccessModal(true);
-      
-      // Recalculate with the updated profile
-      await handleRecalculate();
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      setErrorMessage('Failed to update profile. Please try again.');
-      setShowErrorModal(true);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveClick = () => {
-    setShowConfirmModal(true);
-  };
-
-  const handleReset = () => {
-    setScenarioParams({
-      total_assets: profile.total_assets,
-      fixed_assets: profile.fixed_assets,
-      monthly_salary_net: profile.monthly_salary_net,
-      government_retirement_income: profile.government_retirement_income,
-      monthly_return_rate: profile.monthly_return_rate,
-      fixed_assets_growth_rate: profile.fixed_assets_growth_rate,
-      investment_tax_rate: profile.investment_tax_rate,
-      end_of_salary_years: profile.end_of_salary_years,
-      government_retirement_start_years: profile.government_retirement_start_years,
-      monthly_expense_recurring: profile.monthly_expense_recurring,
-      rent: profile.rent,
-      one_time_annual_expense: profile.one_time_annual_expense,
-      annual_inflation: profile.annual_inflation,
-    });
-    setCurrencyInput({});
-    setPercentInput({});
-    setHasChanges(false);
+    setSimulationParams(prev => ({ ...prev, [name]: numericValue }));
   };
 
   const formatNumberForInput = (amount: number): string => {
@@ -207,270 +103,364 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     }).format(amount);
   };
 
-  const getCurrencyDisplay = (field: string) => {
-    if (currencyInput[field] !== undefined) return currencyInput[field];
-    const value = scenarioParams[field as keyof typeof scenarioParams] as number;
-    return formatNumberForInput(value ?? 0);
+  const getCurrencyDisplay = (name: string, numericValue: number) => {
+    return currencyInput[name] ?? formatNumberForInput(numericValue ?? 0);
   };
 
-  const getPercentDisplay = (field: string) => {
-    if (percentInput[field] !== undefined) return percentInput[field];
-    const value = (scenarioParams[field as keyof typeof scenarioParams] as number) ?? 0;
-    return (value * 100).toFixed(2).replace('.', ',');
+  const getPercentDisplay = (name: string, numericValue: number) => {
+    return percentInput[name] ?? (isNaN(numericValue) ? '' : ((numericValue * 100).toFixed(2)).replace('.', ','));
   };
 
-  const handleCurrencyFocus = (e: React.FocusEvent<HTMLInputElement>, field: string) => {
-    const current = getCurrencyDisplay(field);
-    // Select all text if it's just zeros, so typing replaces it
-    if (current === '0' || current === '0,00' || current === '0.00' || current === '') {
+  const handleCurrencyFocus = (e: React.FocusEvent<HTMLInputElement>, name: string) => {
+    const current = currencyInput[name] ?? formatNumberForInput(simulationParams[name as keyof typeof simulationParams] as number);
+    if (current === '0' || current === '0,00' || current === '') {
       e.target.select();
     }
-    const toSet = (current === '0' || current === '0,00' || current === '0.00') ? '' : current;
-    setCurrencyInput(prev => ({ ...prev, [field]: toSet }));
+    const toSet = (current === '0' || current === '0,00') ? '' : current;
+    setCurrencyInput(prev => ({ ...prev, [name]: prev[name] ?? toSet }));
   };
 
-  const handleCurrencyBlur = (field: string) => {
-    const numericValue = scenarioParams[field as keyof typeof scenarioParams] as number ?? 0;
-    setCurrencyInput(prev => ({ ...prev, [field]: formatNumberForInput(numericValue) }));
+  const handleCurrencyBlur = (name: string) => {
+    const numericValue = simulationParams[name as keyof typeof simulationParams] as number ?? 0;
+    setCurrencyInput(prev => ({ ...prev, [name]: formatNumberForInput(numericValue) }));
   };
 
-  const handlePercentFocus = (e: React.FocusEvent<HTMLInputElement>, field: string) => {
-    const current = getPercentDisplay(field);
-    // Select all text if it's just zeros, so typing replaces it
-    if (current === '0,00' || current === '0' || current === '') {
+  const handlePercentFocus = (e: React.FocusEvent<HTMLInputElement>, name: string) => {
+    const defaultVal = ('' + ((simulationParams[name as keyof typeof simulationParams] as number ?? 0) * 100));
+    const formattedDefault = isNaN(parseFloat(defaultVal)) ? '' : (parseFloat(defaultVal).toFixed(2).replace('.', ','));
+    if (formattedDefault === '0,00' || formattedDefault === '0' || formattedDefault === '') {
       e.target.select();
     }
-    const toSet = (current === '0,00' || current === '0') ? '' : current;
-    setPercentInput(prev => ({ ...prev, [field]: toSet }));
+    const toSet = (formattedDefault === '0,00' || formattedDefault === '0') ? '' : formattedDefault;
+    setPercentInput(prev => ({ ...prev, [name]: prev[name] ?? toSet }));
   };
 
-  const handlePercentBlur = (field: string) => {
-    const numericValue = scenarioParams[field as keyof typeof scenarioParams] as number ?? 0;
-    setPercentInput(prev => ({ ...prev, [field]: (numericValue * 100).toFixed(2).replace('.', ',') }));
+  const handlePercentBlur = (name: string) => {
+    const numericValue = simulationParams[name as keyof typeof simulationParams] as number ?? 0;
+    const display = isNaN(numericValue) ? '' : ((numericValue * 100).toFixed(2)).replace('.', ',');
+    setPercentInput(prev => ({ ...prev, [name]: display }));
   };
+
+  const handleReset = () => {
+    setSimulationParams({ ...initialParams });
+  };
+
+  const handleRecalculate = () => {
+    // Only trigger calculation without saving to profile
+    if (onCalculateScenario) {
+      onCalculateScenario(profile, simulationParams);
+    }
+    setSuccessMessage('Cálculo atualizado com sucesso.');
+    setShowSuccessModal(true);
+  };
+
+  const handleSaveToProfile = async () => {
+    const updatedProfile = {
+      ...profile,
+      total_assets: simulationParams.totalAssets,
+      fixed_assets: simulationParams.fixedAssets,
+      fixed_assets_growth_rate: simulationParams.fixedAssetsGrowthRate,
+      monthly_salary_net: simulationParams.monthlyNetSalary,
+      government_retirement_income: simulationParams.govPension,
+      end_of_salary_years: simulationParams.yearsUntilSalaryEnds,
+      government_retirement_start_years: simulationParams.yearsUntilGovRetirement,
+      monthly_expense_recurring: simulationParams.monthlyExpenses,
+      rent: simulationParams.monthlyRent,
+      one_time_annual_expense: simulationParams.oneTimeExpenses,
+      monthly_return_rate: simulationParams.monthlyReturnRate,
+      investment_tax_rate: simulationParams.investmentTaxRate,
+      annual_inflation: simulationParams.annualInflation,
+    };
+
+    if (onSaveProfileAndRecalculate) {
+      await onSaveProfileAndRecalculate(updatedProfile);
+      setSuccessMessage('Perfil atualizado com sucesso.');
+      setShowSuccessModal(true);
+    }
+  };
+
+  useEffect(() => {
+    setSimulationParams({
+      totalAssets: profile.total_assets || 0,
+      fixedAssets: profile.fixed_assets || 0,
+      fixedAssetsGrowthRate: profile.fixed_assets_growth_rate || 0,
+      monthlyNetSalary: profile.monthly_salary_net || 0,
+      govPension: profile.government_retirement_income || 0,
+      yearsUntilSalaryEnds: profile.end_of_salary_years || 0,
+      yearsUntilGovRetirement: profile.government_retirement_start_years || 0,
+      monthlyExpenses: profile.monthly_expense_recurring || 0,
+      monthlyRent: profile.rent || 0,
+      oneTimeExpenses: profile.one_time_annual_expense || 0,
+      monthlyReturnRate: profile.monthly_return_rate || 0,
+      investmentTaxRate: profile.investment_tax_rate || 0,
+      annualInflation: profile.annual_inflation || 0,
+    });
+  }, [profile]);
 
   return (
-    <div className="scenario-simulator">
-      <div className="scenario-header" onClick={() => setIsExpanded(!isExpanded)}>
-        <h3>🔮 Scenario Simulator</h3>
-        <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
+    <div className="simulator-container">
+      <div className="simulator-header">
+        <h2>Simulador de Cenários</h2>
+        <button className="close-btn" onClick={onClose}>×</button>
       </div>
 
-      {isExpanded && (
-        <div className="scenario-content">
-          <p className="scenario-description">
-            Adjust parameters below to explore different scenarios. Changes won't affect your profile until you save them.
-          </p>
+      <div className="simulator-tabs">
+        <button
+          className={`tab-btn ${activeTab === 'simulator' ? 'active' : ''}`}
+          onClick={() => setActiveTab('simulator')}
+        >
+          Simulador
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'projection' ? 'active' : ''}`}
+          onClick={() => setActiveTab('projection')}
+        >
+          Projeção
+        </button>
+      </div>
 
-          <div className="scenario-grid">
-            {/* Assets Section */}
-            <div className="scenario-section">
-              <h4>💰 Assets</h4>
-              <div className="param-field">
-                <label>Total Assets (R$)</label>
-                <input
-                  type="text"
-                  value={getCurrencyDisplay('total_assets')}
-                  onChange={(e) => handleCurrencyChange('total_assets', e.target.value)}
-                  onFocus={(e) => handleCurrencyFocus(e, 'total_assets')}
-                  onBlur={() => handleCurrencyBlur('total_assets')}
-                  placeholder="0,00"
-                />
-              </div>
-              <div className="param-field">
-                <label>Fixed Assets (R$)</label>
-                <input
-                  type="text"
-                  value={getCurrencyDisplay('fixed_assets')}
-                  onChange={(e) => handleCurrencyChange('fixed_assets', e.target.value)}
-                  onFocus={(e) => handleCurrencyFocus(e, 'fixed_assets')}
-                  onBlur={() => handleCurrencyBlur('fixed_assets')}
-                  placeholder="0,00"
-                />
-              </div>
-              <div className="param-field">
-                <label>Fixed Assets Growth Rate (%/year)</label>
-                <input
-                  type="text"
-                  value={getPercentDisplay('fixed_assets_growth_rate')}
-                  onChange={(e) => handlePercentageChange('fixed_assets_growth_rate', e.target.value)}
-                  onFocus={(e) => handlePercentFocus(e, 'fixed_assets_growth_rate')}
-                  onBlur={() => handlePercentBlur('fixed_assets_growth_rate')}
-                  placeholder="4,00"
-                />
+      {activeTab === 'simulator' && (
+        <div className="simulator-form">
+          <div className="form-description">
+            <p>Ajuste os parâmetros abaixo para explorar diferentes cenários. As mudanças não afetarão seu perfil até que você salve.</p>
+          </div>
+
+          <div className="form-grid">
+            {/* Assets Column */}
+            <div className="form-column">
+              <h4 className="column-header">
+                <span className="column-icon">📈</span>
+                Ativos
+              </h4>
+              <div className="column-fields">
+                <div className="form-group">
+                  <label htmlFor="totalAssets">Total de Ativos (R$)</label>
+                  <input
+                    id="totalAssets"
+                    type="text"
+                    value={getCurrencyDisplay('totalAssets', simulationParams.totalAssets)}
+                    onChange={handleCurrencyChange}
+                    onFocus={(e) => handleCurrencyFocus(e, 'totalAssets')}
+                    onBlur={() => handleCurrencyBlur('totalAssets')}
+                    name="totalAssets"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="fixedAssets">Ativos Fixos (R$)</label>
+                  <input
+                    id="fixedAssets"
+                    type="text"
+                    value={getCurrencyDisplay('fixedAssets', simulationParams.fixedAssets)}
+                    onChange={handleCurrencyChange}
+                    onFocus={(e) => handleCurrencyFocus(e, 'fixedAssets')}
+                    onBlur={() => handleCurrencyBlur('fixedAssets')}
+                    name="fixedAssets"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="fixedGrowth">Crescimento de Ativos Fixos (%/ano)</label>
+                  <input
+                    id="fixedGrowth"
+                    type="text"
+                    value={getPercentDisplay('fixedAssetsGrowthRate', simulationParams.fixedAssetsGrowthRate)}
+                    onChange={handlePercentageChange}
+                    onFocus={(e) => handlePercentFocus(e, 'fixedAssetsGrowthRate')}
+                    onBlur={() => handlePercentBlur('fixedAssetsGrowthRate')}
+                    name="fixedAssetsGrowthRate"
+                    className="form-control"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Income Section */}
-            <div className="scenario-section">
-              <h4>💵 Income</h4>
-              <div className="param-field">
-                <label>Monthly Salary (Net) (R$)</label>
-                <input
-                  type="text"
-                  value={getCurrencyDisplay('monthly_salary_net')}
-                  onChange={(e) => handleCurrencyChange('monthly_salary_net', e.target.value)}
-                  onFocus={(e) => handleCurrencyFocus(e, 'monthly_salary_net')}
-                  onBlur={() => handleCurrencyBlur('monthly_salary_net')}
-                  placeholder="0,00"
-                />
-              </div>
-              <div className="param-field">
-                <label>Government Retirement Income (R$)</label>
-                <input
-                  type="text"
-                  value={getCurrencyDisplay('government_retirement_income')}
-                  onChange={(e) => handleCurrencyChange('government_retirement_income', e.target.value)}
-                  onFocus={(e) => handleCurrencyFocus(e, 'government_retirement_income')}
-                  onBlur={() => handleCurrencyBlur('government_retirement_income')}
-                  placeholder="0,00"
-                />
-              </div>
-              <div className="param-field">
-                <label>Years Until Salary Ends</label>
-                <input
-                  type="number"
-                  value={scenarioParams.end_of_salary_years ?? ''}
-                  onChange={(e) => handleIntegerChange('end_of_salary_years', e.target.value)}
-                  onFocus={(e) => handleIntegerFocus(e, 'end_of_salary_years')}
-                  placeholder="0"
-                />
-              </div>
-              <div className="param-field">
-                <label>Years Until Gov. Retirement</label>
-                <input
-                  type="number"
-                  value={scenarioParams.government_retirement_start_years ?? ''}
-                  onChange={(e) => handleIntegerChange('government_retirement_start_years', e.target.value)}
-                  onFocus={(e) => handleIntegerFocus(e, 'government_retirement_start_years')}
-                  placeholder="0"
-                />
-              </div>
-            </div>
-
-            {/* Expenses Section */}
-            <div className="scenario-section">
-              <h4>💸 Expenses</h4>
-              <div className="param-field">
-                <label>Monthly Recurring Expenses (R$)</label>
-                <input
-                  type="text"
-                  value={getCurrencyDisplay('monthly_expense_recurring')}
-                  onChange={(e) => handleCurrencyChange('monthly_expense_recurring', e.target.value)}
-                  onFocus={(e) => handleCurrencyFocus(e, 'monthly_expense_recurring')}
-                  onBlur={() => handleCurrencyBlur('monthly_expense_recurring')}
-                  placeholder="0,00"
-                />
-              </div>
-              <div className="param-field">
-                <label>Monthly Rent (R$)</label>
-                <input
-                  type="text"
-                  value={getCurrencyDisplay('rent')}
-                  onChange={(e) => handleCurrencyChange('rent', e.target.value)}
-                  onFocus={(e) => handleCurrencyFocus(e, 'rent')}
-                  onBlur={() => handleCurrencyBlur('rent')}
-                  placeholder="0,00"
-                />
-              </div>
-              <div className="param-field">
-                <label>One-time Annual Expense (R$)</label>
-                <input
-                  type="text"
-                  value={getCurrencyDisplay('one_time_annual_expense')}
-                  onChange={(e) => handleCurrencyChange('one_time_annual_expense', e.target.value)}
-                  onFocus={(e) => handleCurrencyFocus(e, 'one_time_annual_expense')}
-                  onBlur={() => handleCurrencyBlur('one_time_annual_expense')}
-                  placeholder="0,00"
-                />
+            {/* Income Column */}
+            <div className="form-column">
+              <h4 className="column-header">
+                <span className="column-icon">💰</span>
+                Renda
+              </h4>
+              <div className="column-fields">
+                <div className="form-group">
+                  <label htmlFor="salary">Salário Mensal Líquido (R$)</label>
+                  <input
+                    id="salary"
+                    type="text"
+                    value={getCurrencyDisplay('monthlyNetSalary', simulationParams.monthlyNetSalary)}
+                    onChange={handleCurrencyChange}
+                    onFocus={(e) => handleCurrencyFocus(e, 'monthlyNetSalary')}
+                    onBlur={() => handleCurrencyBlur('monthlyNetSalary')}
+                    name="monthlyNetSalary"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="govPension">Renda da Previdência (R$)</label>
+                  <input
+                    id="govPension"
+                    type="text"
+                    value={getCurrencyDisplay('govPension', simulationParams.govPension)}
+                    onChange={handleCurrencyChange}
+                    onFocus={(e) => handleCurrencyFocus(e, 'govPension')}
+                    onBlur={() => handleCurrencyBlur('govPension')}
+                    name="govPension"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="salaryYears">Anos até fim do salário</label>
+                  <input
+                    id="salaryYears"
+                    type="number"
+                    value={simulationParams.yearsUntilSalaryEnds}
+                    onChange={(e) => handleInputChange('yearsUntilSalaryEnds', e.target.value)}
+                    name="yearsUntilSalaryEnds"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="govYears">Anos até aposentadoria gov.</label>
+                  <input
+                    id="govYears"
+                    type="number"
+                    value={simulationParams.yearsUntilGovRetirement}
+                    onChange={(e) => handleInputChange('yearsUntilGovRetirement', e.target.value)}
+                    name="yearsUntilGovRetirement"
+                    className="form-control"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Rates Section */}
-            <div className="scenario-section">
-              <h4>📊 Rates</h4>
-              <div className="param-field">
-                <label>Monthly Return Rate (%)</label>
-                <input
-                  type="text"
-                  value={getPercentDisplay('monthly_return_rate')}
-                  onChange={(e) => handlePercentageChange('monthly_return_rate', e.target.value)}
-                  onFocus={(e) => handlePercentFocus(e, 'monthly_return_rate')}
-                  onBlur={() => handlePercentBlur('monthly_return_rate')}
-                  placeholder="0,50"
-                />
+            {/* Expenses Column */}
+            <div className="form-column">
+              <h4 className="column-header">
+                <span className="column-icon">🏠</span>
+                Despesas
+              </h4>
+              <div className="column-fields">
+                <div className="form-group">
+                  <label htmlFor="expenses">Mensais Recorrentes (R$)</label>
+                  <input
+                    id="expenses"
+                    type="text"
+                    value={getCurrencyDisplay('monthlyExpenses', simulationParams.monthlyExpenses)}
+                    onChange={handleCurrencyChange}
+                    onFocus={(e) => handleCurrencyFocus(e, 'monthlyExpenses')}
+                    onBlur={() => handleCurrencyBlur('monthlyExpenses')}
+                    name="monthlyExpenses"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="rent">Aluguel Mensal (R$)</label>
+                  <input
+                    id="rent"
+                    type="text"
+                    value={getCurrencyDisplay('monthlyRent', simulationParams.monthlyRent)}
+                    onChange={handleCurrencyChange}
+                    onFocus={(e) => handleCurrencyFocus(e, 'monthlyRent')}
+                    onBlur={() => handleCurrencyBlur('monthlyRent')}
+                    name="monthlyRent"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="oneTime">Anuais Únicos (R$)</label>
+                  <input
+                    id="oneTime"
+                    type="text"
+                    value={getCurrencyDisplay('oneTimeExpenses', simulationParams.oneTimeExpenses)}
+                    onChange={handleCurrencyChange}
+                    onFocus={(e) => handleCurrencyFocus(e, 'oneTimeExpenses')}
+                    onBlur={() => handleCurrencyBlur('oneTimeExpenses')}
+                    name="oneTimeExpenses"
+                    className="form-control"
+                  />
+                </div>
               </div>
-              <div className="param-field">
-                <label>Investment Tax Rate (%)</label>
-                <input
-                  type="text"
-                  value={getPercentDisplay('investment_tax_rate')}
-                  onChange={(e) => handlePercentageChange('investment_tax_rate', e.target.value)}
-                  onFocus={(e) => handlePercentFocus(e, 'investment_tax_rate')}
-                  onBlur={() => handlePercentBlur('investment_tax_rate')}
-                  placeholder="15,00"
-                />
-              </div>
-              <div className="param-field">
-                <label>Annual Inflation (%)</label>
-                <input
-                  type="text"
-                  value={getPercentDisplay('annual_inflation')}
-                  onChange={(e) => handlePercentageChange('annual_inflation', e.target.value)}
-                  onFocus={(e) => handlePercentFocus(e, 'annual_inflation')}
-                  onBlur={() => handlePercentBlur('annual_inflation')}
-                  placeholder="3,00"
-                />
+            </div>
+
+            {/* Rates Column */}
+            <div className="form-column">
+              <h4 className="column-header">
+                <span className="column-icon">📈</span>
+                Taxas
+              </h4>
+              <div className="column-fields">
+                <div className="form-group">
+                  <label htmlFor="return">Taxa de Retorno Mensal (%)</label>
+                  <input
+                    id="return"
+                    type="text"
+                    value={getPercentDisplay('monthlyReturnRate', simulationParams.monthlyReturnRate)}
+                    onChange={handlePercentageChange}
+                    onFocus={(e) => handlePercentFocus(e, 'monthlyReturnRate')}
+                    onBlur={() => handlePercentBlur('monthlyReturnRate')}
+                    name="monthlyReturnRate"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="tax">Taxa de Imposto s/ Invest. (%)</label>
+                  <input
+                    id="tax"
+                    type="text"
+                    value={getPercentDisplay('investmentTaxRate', simulationParams.investmentTaxRate)}
+                    onChange={handlePercentageChange}
+                    onFocus={(e) => handlePercentFocus(e, 'investmentTaxRate')}
+                    onBlur={() => handlePercentBlur('investmentTaxRate')}
+                    name="investmentTaxRate"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="inflation">Inflação Anual (%)</label>
+                  <input
+                    id="inflation"
+                    type="text"
+                    value={getPercentDisplay('annualInflation', simulationParams.annualInflation)}
+                    onChange={handlePercentageChange}
+                    onFocus={(e) => handlePercentFocus(e, 'annualInflation')}
+                    onBlur={() => handlePercentBlur('annualInflation')}
+                    name="annualInflation"
+                    className="form-control"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="scenario-actions">
-            <button
-              className="btn btn-secondary"
-              onClick={handleReset}
-              disabled={!hasChanges || isCalculating || isSaving}
-            >
+          <div className="form-actions">
+            <button type="button" className="btn btn-secondary" onClick={handleReset}>
               Reset
             </button>
-            <button
-              className="btn btn-primary"
-              onClick={handleRecalculate}
-              disabled={!hasChanges || isCalculating || isSaving}
-            >
-              {isCalculating ? 'Calculating...' : 'Recalculate'}
+            <button type="button" className="btn btn-secondary" onClick={handleRecalculate}>
+              Recalcular
             </button>
-            <button
-              className="btn btn-success"
-              onClick={handleSaveClick}
-              disabled={!hasChanges || isCalculating || isSaving}
-            >
-              {isSaving ? 'Saving...' : 'Save to Profile'}
+            <button type="button" className="btn btn-primary" onClick={handleSaveToProfile}>
+              Salvar no Perfil
             </button>
           </div>
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="modal-overlay" onClick={() => setShowConfirmModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Confirm Save</h3>
-            <p>Save these scenario parameters to your profile?</p>
-            <div className="modal-actions">
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowConfirmModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleSaveToProfile}
-              >
-                Save
-              </button>
-            </div>
+      {activeTab === 'projection' && (
+        <div className="projection-view">
+          <div className="projection-actions">
+            <button
+              className="btn btn-secondary"
+              onClick={() => setActiveTab('simulator')}
+            >
+              Voltar ao Simulador
+            </button>
+            <button className="btn btn-primary">
+              Exportar Projeção
+            </button>
+          </div>
+          <div className="projection-content">
+            <p>Gráfico de projeção será exibido aqui.</p>
           </div>
         </div>
       )}
@@ -480,8 +470,8 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
         <div className="modal-overlay" onClick={() => setShowSuccessModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-icon success">✓</div>
-            <h3>Success!</h3>
-            <p>Profile updated successfully and calculations refreshed.</p>
+            <h3>Sucesso!</h3>
+            <p>{successMessage}</p>
             <div className="modal-actions">
               <button
                 className="btn btn-primary"
@@ -499,8 +489,8 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
         <div className="modal-overlay" onClick={() => setShowErrorModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-icon error">✕</div>
-            <h3>Error</h3>
-            <p>{errorMessage}</p>
+            <h3>Erro</h3>
+            <p>Ocorreu um erro ao processar sua solicitação.</p>
             <div className="modal-actions">
               <button
                 className="btn btn-primary"

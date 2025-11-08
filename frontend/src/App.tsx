@@ -17,10 +17,10 @@ interface HealthResponse {
   environment: string;
 }
 
-type ViewMode = 'dashboard' | 'profiles' | 'create-profile' | 'edit-profile' | 'clone-profile' | 'results';
+type ViewMode = 'list' | 'create-profile' | 'edit-profile' | 'clone-profile' | 'results';
 
 function App() {
-  const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [cloneData, setCloneData] = useState<ProfileCreate | null>(null);
@@ -66,7 +66,7 @@ function App() {
     try {
       const newProfile = await profileApi.create(createData);
       setProfiles(prev => [...prev, newProfile]);
-      setViewMode('profiles');
+      setViewMode('list');
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to create profile');
@@ -79,7 +79,7 @@ function App() {
     try {
       const updatedProfile = await profileApi.update(selectedProfile.id, profileData);
       setProfiles(prev => prev.map(p => p.id === selectedProfile.id ? updatedProfile : p));
-      setViewMode('profiles');
+      setViewMode('list');
       setSelectedProfile(null);
       setError(null);
     } catch (err: any) {
@@ -142,15 +142,40 @@ function App() {
   };
 
   const handleCloseForm = () => {
+    setViewMode('list');
     setSelectedProfile(null);
     setCloneData(null);
-    setViewMode('profiles');
   };
 
   const handleCloseResults = () => {
+    setViewMode('list');
     setCalculation(null);
     setReadiness(null);
-    setViewMode('profiles');
+  };
+
+  const handleCalculateScenario = async (profile: Profile, scenarioParams: any): Promise<RetirementCalculation> => {
+    const calculationResult = await retirementApi.calculateScenario({
+      profile_id: profile.id,
+      expected_return_rate: 0.07,
+      retirement_duration_years: 25,
+      target_age: targetAge,
+      // Override with scenario parameters
+      total_assets: scenarioParams.totalAssets,
+      fixed_assets: scenarioParams.fixedAssets,
+      monthly_salary_net: scenarioParams.monthlyNetSalary,
+      government_retirement_income: scenarioParams.govPension,
+      monthly_return_rate: scenarioParams.monthlyReturnRate,
+      fixed_assets_growth_rate: scenarioParams.fixedAssetsGrowthRate,
+      investment_tax_rate: scenarioParams.investmentTaxRate,
+      end_of_salary_years: scenarioParams.yearsUntilSalaryEnds,
+      government_retirement_start_years: scenarioParams.yearsUntilGovRetirement,
+      monthly_expense_recurring: scenarioParams.monthlyExpenses,
+      rent: scenarioParams.monthlyRent,
+      one_time_annual_expense: scenarioParams.oneTimeExpenses,
+      annual_inflation: scenarioParams.annualInflation,
+    });
+
+    return calculationResult;
   };
 
   const handleProfileUpdateFromScenario = (updatedProfile: Profile) => {
@@ -160,139 +185,81 @@ function App() {
     setError(null);
   };
 
-  const renderDashboard = () => (
-    <div className="dashboard">
-      <div className="card">
-        <h2>📊 Dashboard Overview</h2>
-        <div className="stats-grid">
-          <div className="stat-item">
-            <h3>Total Profiles</h3>
-            <p>{profiles.length}</p>
-          </div>
-          <div className="stat-item">
-            <h3>Active Users</h3>
-            <p>{profiles.length}</p>
-          </div>
-          <div className="stat-item">
-            <h3>Calculations Done</h3>
-            <p>{profiles.filter(p => p.last_calculation).length}</p>
-          </div>
-          <div className="stat-item">
-            <h3>System Status</h3>
-            <p>{healthData?.status === 'healthy' ? '✅ Online' : '❌ Offline'}</p>
-          </div>
-        </div>
-      </div>
+  const handleSaveProfileAndRecalculate = async (updatedProfile: Profile) => {
+    if (!selectedProfile) return;
 
-      <div className="card">
-        <h2>🚀 Quick Actions</h2>
-        <div className="actions-grid">
-          <button 
-            className="action-btn primary"
-            onClick={() => setViewMode('create-profile')}
-          >
-            <span className="action-icon">➕</span>
-            <span>Create New Profile</span>
-          </button>
-          <button 
-            className="action-btn secondary"
-            onClick={() => setViewMode('profiles')}
-          >
-            <span className="action-icon">👥</span>
-            <span>View All Profiles</span>
-          </button>
-        </div>
-      </div>
+    try {
+      setLoading(true);
+      // Save the profile to backend
+      const savedProfile = await profileApi.update(selectedProfile.id, {
+        email: updatedProfile.email,
+        base_age: updatedProfile.base_age,
+        total_assets: updatedProfile.total_assets,
+        fixed_assets: updatedProfile.fixed_assets,
+        monthly_salary_net: updatedProfile.monthly_salary_net,
+        government_retirement_income: updatedProfile.government_retirement_income,
+        government_retirement_start_years: updatedProfile.government_retirement_start_years,
+        government_retirement_adjustment: updatedProfile.government_retirement_adjustment,
+        monthly_return_rate: updatedProfile.monthly_return_rate,
+        fixed_assets_growth_rate: updatedProfile.fixed_assets_growth_rate,
+        investment_tax_rate: updatedProfile.investment_tax_rate,
+        investment_taxable_percentage: updatedProfile.investment_taxable_percentage,
+        end_of_salary_years: updatedProfile.end_of_salary_years,
+        monthly_expense_recurring: updatedProfile.monthly_expense_recurring,
+        rent: updatedProfile.rent,
+        one_time_annual_expense: updatedProfile.one_time_annual_expense,
+        annual_inflation: updatedProfile.annual_inflation,
+      });
 
-      <div className="card">
-        <h2>🔧 System Status</h2>
-        {loading && <p>Loading system status...</p>}
-        {error && (
-          <div className="error-message">
-            <p>⚠️ {error}</p>
-            <p>Please make sure the backend server is running:</p>
-            <code>cd backend && pip install -r requirements.txt && python main.py</code>
-          </div>
-        )}
-        {apiData && healthData && (
-          <div className="status-info">
-            <div className="status-item">
-              <span className="status-label">API Status:</span>
-              <span className="status-value success">✅ {healthData.status}</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Environment:</span>
-              <span className="status-value">{healthData.environment}</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Version:</span>
-              <span className="status-value">{apiData.version}</span>
-            </div>
-            <div className="status-item">
-              <span className="status-label">Message:</span>
-              <span className="status-value">{apiData.message}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+      // Update local state
+      setProfiles(prev => prev.map(p => p.id === savedProfile.id ? savedProfile : p));
+      setSelectedProfile(savedProfile);
+
+      // Recalculate with the updated profile
+      const [calculationResult, readinessResult] = await Promise.all([
+        retirementApi.calculate({
+          profile_id: savedProfile.id,
+          expected_return_rate: 0.07,
+          retirement_duration_years: 25,
+          target_age: targetAge
+        }),
+        retirementApi.getReadiness(savedProfile.id, 0.07)
+      ]);
+
+      setCalculation(calculationResult);
+      setReadiness(readinessResult);
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to save profile and recalculate');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderProfiles = () => (
-    <div className="profiles-view">
-      <div className="view-header">
-        <h2>👥 Retirement Profiles</h2>
-        <button 
-          className="btn btn-primary"
-          onClick={() => setViewMode('create-profile')}
-        >
-          ➕ Create New Profile
-        </button>
-      </div>
-      <div className="filters" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
-        <label style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <span>🎯 Target Age</span>
-          <input
-            type="number"
-            min={50}
-            max={120}
-            value={targetAge}
-            onChange={(e) => setTargetAge(Math.min(120, Math.max(50, parseInt(e.target.value || '100', 10))))}
-            style={{ width: '90px' }}
-          />
-        </label>
-        <small>Used for simulations. Default is 100.</small>
-      </div>
-      <ProfileList
-        profiles={profiles}
-        onEdit={handleEditProfile}
-        onDelete={handleDeleteProfile}
-        onCalculate={handleCalculateRetirement}
-        onClone={handleCloneProfile}
-        isLoading={loading}
-      />
-    </div>
+    <ProfileList
+      profiles={profiles}
+      onEdit={handleEditProfile}
+      onDelete={handleDeleteProfile}
+      onCalculate={handleCalculateRetirement}
+      onClone={handleCloneProfile}
+      isLoading={loading}
+    />
   );
 
   return (
     <div className="App">
       <header className="App-header">
-        <h1>🏦 Retirement Planning App</h1>
-        <p>Welcome to your personal retirement planning dashboard</p>
-        <nav className="main-nav">
-          <button 
-            className={`nav-btn ${viewMode === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setViewMode('dashboard')}
-          >
-            📊 Dashboard
-          </button>
-          <button 
-            className={`nav-btn ${viewMode === 'profiles' ? 'active' : ''}`}
-            onClick={() => setViewMode('profiles')}
-          >
-            👥 Profiles
-          </button>
-        </nav>
+        <div className="header-content-wrapper">
+          <div>
+            <h1>Planejamento de Aposentadoria</h1>
+            <p>Planeje seu futuro financeiro com confiança</p>
+          </div>
+          <div className="target-age-badge">
+            <span className="badge-label">Idade Alvo:</span>
+            <span className="badge-value">{targetAge}</span>
+          </div>
+        </div>
       </header>
 
       <main className="App-main">
@@ -303,8 +270,17 @@ function App() {
           </div>
         )}
 
-        {viewMode === 'dashboard' && renderDashboard()}
-        {viewMode === 'profiles' && renderProfiles()}
+        <div className="profiles-header">
+          <div>
+            <h2>Seus Perfis</h2>
+            <p>Gerencie e calcule cenários de aposentadoria</p>
+          </div>
+          <button className="btn-create" onClick={() => setViewMode('create-profile')}>
+            ➕ Criar Perfil
+          </button>
+        </div>
+
+        {renderProfiles()}
         {viewMode === 'create-profile' && (
           <ProfileForm
             onSubmit={handleCreateProfile}
@@ -335,12 +311,14 @@ function App() {
             onClose={handleCloseResults}
             profile={selectedProfile || undefined}
             onProfileUpdate={handleProfileUpdateFromScenario}
+            onCalculateScenario={handleCalculateScenario}
+            onSaveProfileAndRecalculate={handleSaveProfileAndRecalculate}
           />
         )}
       </main>
 
       <footer className="App-footer">
-        <p>© 2025 Retirement Planning App.</p>
+        <p>© 2025 Planejamento de Aposentadoria.</p>
       </footer>
     </div>
   );

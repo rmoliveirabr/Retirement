@@ -217,7 +217,7 @@ class RetirementCalculator:
                 timeline.append({
                     "year": years_since_retirement + 1,
                     "age": age,
-                    "period": f"{display_start.strftime('%m-%Y')} - {display_end.strftime('%m-%Y')}",
+                    "period": f"{display_start.strftime('%m-%Y')} -> {display_end.strftime('%m-%Y')}",
                     "value_invested": round(current_value, 2),
                     "total_expenses": round(total_expenses_year, 2),
                     "total_income_salary": round(total_income_salary_year, 2),

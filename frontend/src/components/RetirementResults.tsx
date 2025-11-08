@@ -10,12 +10,21 @@ interface RetirementResultsProps {
   onClose: () => void;
   profile?: Profile;
   onProfileUpdate?: (profile: Profile) => void;
+  onCalculateScenario?: (profile: Profile, scenarioParams: any) => Promise<RetirementCalculation>;
+  onSaveProfileAndRecalculate?: (profile: Profile) => void;
 }
 
-const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, readiness, onClose, profile, onProfileUpdate }) => {
+const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, readiness, onClose, profile, onProfileUpdate, onCalculateScenario, onSaveProfileAndRecalculate }) => {
   // State to manage current calculation (either original or scenario)
   const [currentCalculation, setCurrentCalculation] = useState(calculation);
   const [isScenario, setIsScenario] = useState(false);
+  const [simulatorOpen, setSimulatorOpen] = useState(false);
+
+  // Reset current calculation when main calculation prop changes
+  useEffect(() => {
+    setCurrentCalculation(calculation);
+    setIsScenario(false);
+  }, [calculation]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -43,16 +52,16 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
   };
 
   const getReadinessColor = (score: number) => {
-    if (score >= 80) return '#27ae60';
-    if (score >= 60) return '#f39c12';
-    return '#e74c3c';
+    if (score >= 80) return 'var(--color-primary)';
+    if (score >= 60) return '#f59e0b';
+    return '#dc2626';
   };
 
   const getReadinessLabel = (score: number) => {
-    if (score >= 80) return 'Excellent';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Fair';
-    return 'Needs Improvement';
+    if (score >= 80) return 'Excelente';
+    if (score >= 60) return 'Bom';
+    if (score >= 40) return 'Regular';
+    return 'Ruim';
   };
 
   // Use currentCalculation or fall back to calculation prop
@@ -79,6 +88,20 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
     setIsScenario(true);
   };
 
+  // Handler for scenario calculation
+  const handleCalculateScenarioLocal = async (profile: Profile, scenarioParams: any) => {
+    if (!onCalculateScenario) return;
+
+    try {
+      const calculationResult = await onCalculateScenario(profile, scenarioParams);
+      // Update the current calculation state with the scenario result
+      setCurrentCalculation(calculationResult);
+      setIsScenario(true);
+    } catch (error) {
+      console.error('Failed to calculate scenario:', error);
+    }
+  };
+
   // Handler for when profile is updated from scenario
   const handleProfileUpdate = (updatedProfile: Profile) => {
     setIsScenario(false);
@@ -97,79 +120,139 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
     <div className="retirement-results-overlay" onClick={handleOverlayClick}>
       <div className="retirement-results">
         <div className="results-header">
-          <h2>Retirement Analysis Results {isScenario && <span className="scenario-badge">Scenario</span>}</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <div>
+            <h2>Resultados da Análise de Aposentadoria</h2>
+            <p className="results-subtitle">Projeções abrangentes de planejamento de aposentadoria para {profile?.email || 'seu perfil'}</p>
+          </div>
+          <button className="close-btn" onClick={onClose} aria-label="Close">×</button>
         </div>
 
         <div className="results-content">
           {readiness && (
-            <div className="readiness-section">
-              <h3>📊 Retirement Readiness</h3>
-              <div className="readiness-score">
-                <div 
-                  className="score-circle"
-                  style={{ borderColor: getReadinessColor(readiness.readiness_score) }}
-                >
-                  <span className="score-number">{readiness.readiness_score.toFixed(0)}</span>
-                  <span className="score-label">Score</span>
+            <div className="readiness-card">
+              <div className="readiness-content">
+                <div className="score-circle-wrapper">
+                  <svg className="score-svg" viewBox="0 0 96 96">
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      className="score-bg"
+                    />
+                    <circle
+                      cx="48"
+                      cy="48"
+                      r="40"
+                      className="score-progress"
+                      style={{
+                        stroke: getReadinessColor(readiness.readiness_score),
+                        strokeDasharray: `${2 * Math.PI * 40}`,
+                        strokeDashoffset: `${2 * Math.PI * 40 * (1 - readiness.readiness_score / 100)}`
+                      }}
+                    />
+                  </svg>
+                  <div className="score-value">
+                    <span className="score-number">{readiness.readiness_score.toFixed(0)}</span>
+                  </div>
                 </div>
                 <div className="score-details">
-                  <h4 style={{ color: getReadinessColor(readiness.readiness_score) }}>
+                  <h3 className="score-label" style={{ color: getReadinessColor(readiness.readiness_score) }}>
                     {getReadinessLabel(readiness.readiness_score)}
-                  </h4>
-                  <p>Based on your financial profile and projections</p>
+                  </h3>
+                  <p className="score-description">Baseado no seu perfil financeiro e projeções</p>
                 </div>
               </div>
             </div>
           )}
 
           {profile && calculation && (
-            <ScenarioSimulator
-              profile={profile}
-              originalCalculation={calculation}
-              onScenarioCalculated={handleScenarioCalculated}
-              onProfileUpdate={handleProfileUpdate}
-            />
+            <div className="simulator-section">
+              <button 
+                className="simulator-toggle-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSimulatorOpen(!simulatorOpen);
+                }}
+                aria-expanded={simulatorOpen}
+                aria-controls="simulator-content"
+              >
+                <div className="simulator-toggle-content">
+                  <h3 className="simulator-title">Simulador de Cenários</h3>
+                  <p className="simulator-description">Clique para {simulatorOpen ? 'ocultar' : 'mostrar'} opções de simulação de cenários</p>
+                </div>
+                <span className="simulator-toggle-icon">
+                  {simulatorOpen ? '▲' : '▼'}
+                </span>
+              </button>
+              {simulatorOpen && (
+                <div className="simulator-content">
+                  <ScenarioSimulator
+                    profile={profile}
+                    originalCalculation={calculation}
+                    onScenarioCalculated={handleScenarioCalculated}
+                    onProfileUpdate={handleProfileUpdate}
+                    onClose={() => setSimulatorOpen(false)}
+                    onUpdateProfile={handleProfileUpdate}
+                    onCalculateScenario={handleCalculateScenarioLocal}
+                    onSaveProfileAndRecalculate={onSaveProfileAndRecalculate}
+                    onCalculate={() => {
+                      // Trigger a recalculation when the scenario is calculated
+                      if (onProfileUpdate && profile) {
+                        onProfileUpdate(profile);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           )}
 
           {activeCalculation && (
             <div className="calculation-section">
-              <h3>💰 Retirement Projections</h3>
+              <h3 className="section-title">Projeções de Aposentadoria</h3>
               
               <div className="projection-grid">
-                <div className="projection-card primary">
-                  <div className="card-icon">🎯</div>
+                <div className="projection-card">
+                  <div className="card-header">
+                    <span className="card-icon">📈</span>
+                    <h4 className="card-title">Fundo Inicial de Aposentadoria</h4>
+                  </div>
                   <div className="card-content">
-                    <h4>Initial Retirement Fund</h4>
-                    <p className="card-value">{formatCurrency0(activeCalculation.total_retirement_fund)}</p>
-                    <p className="card-description">Projected value at retirement</p>
+                    <p className="card-value primary">{formatCurrency0(activeCalculation.total_retirement_fund)}</p>
+                    <p className="card-description">Valor projetado na aposentadoria</p>
                   </div>
                 </div>
 
                 <div className="projection-card">
-                  <div className="card-icon">🏠</div>
+                  <div className="card-header">
+                    <span className="card-icon">🏠</span>
+                    <h4 className="card-title">Ativos Fixos Iniciais</h4>
+                  </div>
                   <div className="card-content">
-                    <h4>Initial Fixed Assets ({(fixedAssetsGrowthRate * 100).toFixed(1)}%/yr)</h4>
                     <p className="card-value">{formatCurrency0(fixedAssetsAtRetirement)}</p>
-                    <p className="card-description">Projected from your fixed assets</p>
+                    <p className="card-description">Projetado a partir dos seus ativos fixos</p>
                   </div>
                 </div>
 
                 <div className="projection-card">
-                  <div className="card-icon">📅</div>
+                  <div className="card-header">
+                    <span className="card-icon">📅</span>
+                    <h4 className="card-title">Anos Cobertos pelos Fundos</h4>
+                  </div>
                   <div className="card-content">
-                    <h4>Years Covered by Funds</h4>
                     <p className="card-value">{yearsCoveredByFunds}</p>
-                    <p className="card-description">Full years before funds deplete</p>
+                    <p className="card-description">Anos completos antes dos fundos se esgotarem</p>
                   </div>
                 </div>
 
                 <div className="projection-card">
-                  <div className="card-icon">🧓</div>
+                  <div className="card-header">
+                    <span className="card-icon">😊</span>
+                    <h4 className="card-title">Idade Quando os Fundos se Esgotam</h4>
+                  </div>
                   <div className="card-content">
-                    <h4>Age When Funds Deplete</h4>
                     <p className="card-value">{ageWhenFundsDeplete}</p>
-                    <p className="card-description">Estimated age at depletion</p>
+                    <p className="card-description">Idade estimada no esgotamento</p>
                   </div>
                 </div>
               </div>
@@ -177,21 +260,24 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
               {/* Timeline table */}
               {activeCalculation.assumptions.timeline && activeCalculation.assumptions.timeline.length > 0 && (
                 <div className="timeline-section">
-                  <h4>📈 Year-by-year Projections</h4>
+                  <div className="timeline-header">
+                    <h4 className="timeline-title">Projeções Ano a Ano</h4>
+                    <p className="timeline-description">Projeções financeiras detalhadas ao longo do tempo</p>
+                  </div>
                   <div className="timeline-table-wrapper">
                     <table className="timeline-table">
                           <thead>
                         <tr>
-                          <th>Year #</th>
-                          <th>Age</th>
-                          <th>Period</th>
-                          <th>Value Invested</th>
-                          <th>Total Expenses</th>
-                          <th>Total Income (Salary)</th>
-                          <th>Total Income (Retirement)</th>
-                          <th>Total to be Added</th>
-                          <th>Taxes over Investments</th>
-                          <th>Final Value</th>
+                          <th>Ano #</th>
+                          <th>Idade</th>
+                          <th>Período</th>
+                          <th>Valor Investido</th>
+                          <th>Despesas Totais</th>
+                          <th>Renda Total (Salário)</th>
+                          <th>Renda Total (Aposentadoria)</th>
+                          <th>Total a ser Adicionado</th>
+                          <th>Impostos sobre Investimentos</th>
+                          <th>Valor Final</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -220,7 +306,7 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
 
         <div className="results-footer">
           <button className="btn btn-primary" onClick={onClose}>
-            Close
+            Fechar
           </button>
         </div>
       </div>

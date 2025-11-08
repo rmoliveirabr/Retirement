@@ -21,6 +21,7 @@ const ProfileList: React.FC<ProfileListProps> = ({
   isLoading = false 
 }) => {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   const formatCurrency = (amount: number) => {
     return formatBrazilianCurrency(amount);
@@ -52,7 +53,7 @@ const ProfileList: React.FC<ProfileListProps> = ({
   if (isLoading) {
     return (
       <div className="profile-list">
-        <div className="loading">Loading profiles...</div>
+        <div className="loading">Carregando perfis...</div>
       </div>
     );
   }
@@ -61,8 +62,8 @@ const ProfileList: React.FC<ProfileListProps> = ({
     return (
       <div className="profile-list">
         <div className="empty-state">
-          <h3>No profiles found</h3>
-          <p>Create your first retirement profile to get started with planning.</p>
+          <h3>Nenhum perfil encontrado</h3>
+          <p>Crie seu primeiro perfil de aposentadoria para começar o planejamento.</p>
         </div>
       </div>
     );
@@ -75,85 +76,85 @@ const ProfileList: React.FC<ProfileListProps> = ({
           <div key={profile.id} className="profile-card">
             <div className="profile-header">
               <div className="email-block">
-                <div className="email-label">Email</div>
-                <div className="email-value" title={profile.email}>{profile.email}</div>
+                <div className="email-label">Email: {profile.email}</div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+                  <div className="age-badge">Idade: {profile.base_age}</div>
+                  {profile.last_calculation && (
+                    <span className="last-calc-date">
+                      📅 {formatDate(profile.last_calculation)}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="profile-actions">
+              <div className="profile-menu">
                 <button 
-                  className="btn btn-sm btn-primary"
-                  onClick={() => onCalculate(profile)}
-                  title="Calculate Retirement"
+                  className="menu-button"
+                  onClick={() => setOpenMenuId(openMenuId === profile.id ? null : profile.id)}
+                  title="Ações"
                 >
-                  📊 Calculate
+                  ⋮
                 </button>
-                <button 
-                  className="btn btn-sm btn-secondary"
-                  onClick={() => onEdit(profile)}
-                  title="Edit Profile"
-                >
-                  ✏️ Edit
-                </button>
-                <button 
-                  className="btn btn-sm btn-info"
-                  onClick={() => onClone(profile)}
-                  title="Clone Profile"
-                >
-                  📋 Clone
-                </button>
-                <button 
-                  className="btn btn-sm btn-danger"
-                  onClick={() => handleDeleteClick(profile.id)}
-                  title="Delete Profile"
-                >
-                  🗑️ Delete
-                </button>
+                {openMenuId === profile.id && (
+                  <>
+                    <div className="menu-backdrop" onClick={() => setOpenMenuId(null)} />
+                    <div className="menu-dropdown">
+                      <button onClick={() => { onEdit(profile); setOpenMenuId(null); }}>
+                        ✏️ Editar Perfil
+                      </button>
+                      <button onClick={() => { onClone(profile); setOpenMenuId(null); }}>
+                        📋 Clonar Perfil
+                      </button>
+                      <button className="danger" onClick={() => { handleDeleteClick(profile.id); setOpenMenuId(null); }}>
+                        🗑️ Excluir Perfil
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             <div className="profile-content">
-              <div className="profile-stats">
-                <div className="stat">
-                  <span className="stat-label">Age:</span>
-                  <span className="stat-value">{profile.base_age} years</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-label">Total Assets:</span>
+              {/* Key Metrics - 2x2 Grid */}
+              <div className="profile-stats-grid">
+                <div className="stat-item">
+                  <span className="stat-label">Ativos Totais</span>
                   <span className="stat-value">{formatCurrency(profile.total_assets)}</span>
                 </div>
-                <div className="stat">
-                  <span className="stat-label">Monthly Net Salary:</span>
+                <div className="stat-item">
+                  <span className="stat-label">Salário Mensal</span>
                   <span className="stat-value">{formatCurrency(profile.monthly_salary_net)}</span>
                 </div>
-                <div className="stat">
-                  <span className="stat-label">Gov Pension Starts In:</span>
-                  <span className="stat-value">{(profile as any).government_retirement_start_years ?? 0} years</span>
+                <div className="stat-item">
+                  <span className="stat-label">Despesas Mensais</span>
+                  <span className="stat-value">{formatCurrency(profile.monthly_expense_recurring + profile.rent)}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Poupança Mensal</span>
+                  <span className="stat-value savings">{formatCurrency(profile.monthly_salary_net - (profile.monthly_expense_recurring + profile.rent))}</span>
                 </div>
               </div>
 
+              {/* Additional Info */}
               <div className="profile-details">
                 <div className="detail-row">
-                  <span className="detail-label">Monthly Expenses:</span>
-                  <span className="detail-value">{formatCurrency(profile.monthly_expense_recurring + profile.rent)}</span>
+                  <span className="detail-label">Taxa de Retorno do Investimento</span>
+                  <span className="detail-value">{(profile.monthly_return_rate * 100).toFixed(2)}%</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Monthly Savings:</span>
-                  <span className="detail-value">
-                    {formatCurrency(profile.monthly_salary_net - (profile.monthly_expense_recurring + profile.rent))}
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Monthly Return Rate:</span>
-                  <span className="detail-value">
-                    {(profile.monthly_return_rate * 100).toFixed(2)}%
-                  </span>
+                  <span className="detail-label">Aposentadoria do Governo em</span>
+                  <span className="detail-value">{(profile as any).government_retirement_start_years ?? 0} anos</span>
                 </div>
               </div>
 
-              {profile.last_calculation && (
-                <div className="profile-footer">
-                  <small>Last calculated: {formatDate(profile.last_calculation)}</small>
-                </div>
-              )}
+              {/* Action Button */}
+              <div className="profile-footer">
+                <button 
+                  className="btn-calculate"
+                  onClick={() => onCalculate(profile)}
+                >
+                  🧮 Calcular Aposentadoria
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -163,14 +164,14 @@ const ProfileList: React.FC<ProfileListProps> = ({
       {deleteConfirm && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Confirm Delete</h3>
-            <p>Are you sure you want to delete this profile? This action cannot be undone.</p>
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza de que deseja excluir este perfil? Esta ação não pode ser desfeita.</p>
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={handleDeleteCancel}>
-                Cancel
+                Cancelar
               </button>
               <button className="btn btn-danger" onClick={handleDeleteConfirm}>
-                Delete
+                Excluir
               </button>
             </div>
           </div>
