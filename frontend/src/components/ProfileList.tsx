@@ -12,13 +12,13 @@ interface ProfileListProps {
   isLoading?: boolean;
 }
 
-const ProfileList: React.FC<ProfileListProps> = ({ 
-  profiles, 
-  onEdit, 
-  onDelete, 
-  onCalculate, 
-  onClone, 
-  isLoading = false 
+const ProfileList: React.FC<ProfileListProps> = ({
+  profiles,
+  onEdit,
+  onDelete,
+  onCalculate,
+  onClone,
+  isLoading = false
 }) => {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -87,7 +87,7 @@ const ProfileList: React.FC<ProfileListProps> = ({
                 </div>
               </div>
               <div className="profile-menu">
-                <button 
+                <button
                   className="menu-button"
                   onClick={() => setOpenMenuId(openMenuId === profile.id ? null : profile.id)}
                   title="Ações"
@@ -148,11 +148,14 @@ const ProfileList: React.FC<ProfileListProps> = ({
 
               {/* Action Button */}
               <div className="profile-footer">
-                <button 
+                <button
                   className="btn-calculate"
                   onClick={() => onCalculate(profile)}
                 >
-                  🧮 Calcular Aposentadoria
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9 7H9.01M9 17H9.01M15 7H15.01M15 17H15.01M7 21H17C18.1046 21 19 20.1046 19 19V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21ZM7 13H17V11H7V13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  Calcular Aposentadoria
                 </button>
               </div>
             </div>

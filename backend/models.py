@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from typing import Optional
+from typing import Optional, List, Any
 from datetime import datetime
 
 class ProfileBase(BaseModel):
@@ -139,3 +139,14 @@ class ScenarioRequest(BaseModel):
     rent: Optional[float] = None
     one_time_annual_expense: Optional[float] = None
     annual_inflation: Optional[float] = None
+
+class AIRequest(BaseModel):
+    """
+    Model for the request sent to the AI assistant endpoint.
+    Includes the user's question, profile parameters,
+    and the calculation results (projection rows).
+    """
+    question: str
+    profile: dict
+    results: List[dict]
+    history: Optional[List[dict]] = None

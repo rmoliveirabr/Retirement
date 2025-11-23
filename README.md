@@ -120,6 +120,7 @@ The frontend will be available at `http://localhost:3000`
 - **Data Validation**: Comprehensive input validation with Pydantic
 - **API Documentation**: Auto-generated OpenAPI/Swagger docs
 - **Error Handling**: Robust error handling and HTTP status codes
+- **AI Assistant**: Context-aware financial advice using OpenAI (GPT-4)
 - **CORS Configuration**: Cross-origin resource sharing setup
 
 ### Frontend (React + TypeScript)
@@ -129,6 +130,7 @@ The frontend will be available at `http://localhost:3000`
 - **Responsive Design**: Mobile-friendly interface with CSS Grid/Flexbox
 - **Form Validation**: Client-side validation with error handling
 - **Modern UI**: Beautiful gradients, animations, and interactive components
+- **AI Chat Interface**: Interactive chat for personalized financial advice
 
 ### Database (JSON Server)
 - **RESTful API**: Full REST API for data operations
@@ -208,6 +210,10 @@ The application provides:
 - `JSON_SERVER_URL`: JSON Server endpoint
 - `DEBUG`: Enable debug mode
 - `CORS_ORIGINS`: Allowed origins for CORS
+- `OPENAI_API_KEY`: Your OpenAI API Key (required for AI Assistant)
+- `OPENAI_MODEL`: OpenAI Model to use (default: gpt-4-turbo)
+
+> **Note:** Copy `.env.example` to `.env` in the `backend` directory and fill in your values.
 
 ### JSON Server
 - Database file: `database/db.json`

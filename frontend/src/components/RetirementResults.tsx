@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { RetirementCalculation, RetirementReadiness, Profile } from '../types';
 import { formatBrazilianCurrency } from '../utils/currency';
 import ScenarioSimulator from './ScenarioSimulator';
+import { askAI } from "../services/api";
 import './RetirementResults.css';
+
+import ReactMarkdown from "react-markdown";
 
 interface RetirementResultsProps {
   calculation?: RetirementCalculation;
@@ -19,6 +22,12 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
   const [currentCalculation, setCurrentCalculation] = useState(calculation);
   const [isScenario, setIsScenario] = useState(false);
   const [simulatorOpen, setSimulatorOpen] = useState(false);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [question, setQuestion] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Reset current calculation when main calculation prop changes
   useEffect(() => {
@@ -41,6 +50,51 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
   }, [onClose]);
   const formatCurrency = (amount: number) => {
     return formatBrazilianCurrency(amount);
+  };
+
+  const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+
+  // handle ask to AI
+  const handleAskAI = async () => {
+    if (!question.trim()) return;
+
+    const userQuestion = question;
+    setQuestion(""); // Clear input immediately
+
+    // Add user message to history
+    const newHistory = [...chatHistory, { role: 'user' as const, content: userQuestion }];
+    setChatHistory(newHistory);
+
+    try {
+      setLoading(true);
+      setError("");
+
+      // Calculation should contain the rows you display
+      const results = activeCalculation?.assumptions?.timeline || [];
+
+      // Use the active calculation's assumptions if available, as they might contain scenario overrides
+      // Merge them with the base profile to ensure we have all fields
+      const contextProfile = {
+        ...profile,
+        ...activeCalculation?.assumptions
+      };
+
+      // Pass the *previous* history (excluding the current question) to the API
+      const response = await askAI(userQuestion, contextProfile, results, chatHistory);
+
+      setChatHistory([...newHistory, { role: 'assistant', content: response.answer }]);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+      // Optionally remove the user question if it failed, or show error in chat
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearChat = () => {
+    setChatHistory([]);
+    setQuestion("");
+    setError("");
   };
 
   const formatCurrency0 = (amount: number) => {
@@ -167,7 +221,7 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
 
           {profile && calculation && (
             <div className="simulator-section">
-              <button 
+              <button
                 className="simulator-toggle-button"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -210,7 +264,7 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
           {activeCalculation && (
             <div className="calculation-section">
               <h3 className="section-title">Projeções de Aposentadoria</h3>
-              
+
               <div className="projection-grid">
                 <div className="projection-card">
                   <div className="card-header">
@@ -266,7 +320,7 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
                   </div>
                   <div className="timeline-table-wrapper">
                     <table className="timeline-table">
-                          <thead>
+                      <thead>
                         <tr>
                           <th>Ano #</th>
                           <th>Idade</th>
@@ -305,10 +359,88 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
         </div>
 
         <div className="results-footer">
+          {/* 💬 Ask AI icon */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            title="Pergunta para a IA sobre seu plano de aposentadoria"
+            className="btn btn-ai-trigger"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ai-icon">
+              <path d="M12 4L14.4 9.6L20 12L14.4 14.4L12 20L9.6 14.4L4 12L9.6 9.6L12 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M18 4L19.2 6.8L22 8L19.2 9.2L18 12L16.8 9.2L14 8L16.8 6.8L18 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Pergunte para a IA
+          </button>
           <button className="btn btn-primary" onClick={onClose}>
             Fechar
           </button>
         </div>
+
+        {/* Modal */}
+        {isModalOpen && (
+          <div className="ai-question-modal">
+            <div className="ai-question-modal-content">
+              <div className="ai-modal-header">
+                <h3 className="ai-modal-title">Assistente de Aposentadoria</h3>
+                {chatHistory.length > 0 && (
+                  <button className="btn-clear" onClick={handleClearChat}>
+                    Limpar Conversa
+                  </button>
+                )}
+              </div>
+
+              <div className="ai-chat-container">
+                {chatHistory.length === 0 ? (
+                  <div className="ai-empty-state">
+                    <p>Olá! Eu analisei seu perfil e projeções.</p>
+                    <p>Pergunte-me sobre seus investimentos, idade de aposentadoria ou como melhorar seus resultados.</p>
+                  </div>
+                ) : (
+                  <div className="ai-chat-history">
+                    {chatHistory.map((msg, idx) => (
+                      <div key={idx} className={`ai-message ${msg.role}`}>
+                        <div className="ai-message-bubble">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      </div>
+                    ))}
+                    {loading && (
+                      <div className="ai-message assistant">
+                        <div className="ai-message-bubble loading">
+                          Pensando...
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="ai-input-area">
+                <textarea
+                  className="ai-modal-textarea"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Digite sua pergunta aqui..."
+                  rows={3}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAskAI();
+                    }
+                  }}
+                />
+                <div className="ai-modal-actions">
+                  <button className="btn btn-primary" onClick={handleAskAI} disabled={loading || !question.trim()}>
+                    Enviar
+                  </button>
+                  <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Fechar</button>
+                </div>
+              </div>
+
+              {error && <p className="ai-error">{error}</p>}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

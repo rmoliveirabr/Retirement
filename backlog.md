@@ -1,0 +1,2 @@
+- simulação - campo com 1, quando tendo editar e fica 0, ele trava o 0 e se digito 5, fica 05
+- 

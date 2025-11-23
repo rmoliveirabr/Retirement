@@ -1,14 +1,16 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import os
-import httpx
 from typing import List, Optional
-import httpx as _httpx
 from datetime import datetime
 from dotenv import load_dotenv
-from models import Profile, ProfileCreate, ProfileUpdate, RetirementCalculation, CalculationRequest, ScenarioRequest
+from models import Profile, ProfileCreate, ProfileUpdate, RetirementCalculation, CalculationRequest, ScenarioRequest, AIRequest
 from retirement_calculator import RetirementCalculator
+from ai_service import generate_ai_response
+
+import os
+import httpx
+import httpx as _httpx
 import re
 
 # Load environment variables
@@ -356,6 +358,25 @@ async def calculate_scenario(request: ScenarioRequest, http_client: httpx.AsyncC
     except httpx.RequestError as e:
         raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
 
+# Chatbot AI Endpoint
+@app.post("/api/retirement/ask-ai")
+async def ask_ai(request: AIRequest):
+    """
+    Handles questions sent to the AI assistant.
+    Uses the user's profile and retirement calculation results
+    as context for the OpenAI prompt.
+    """
+    try:
+        result = generate_ai_response(
+            profile=request.profile,
+            results=request.results,
+            question=request.question,
+            history=request.history
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 # Basic API Routes
 @app.get("/", response_model=WelcomeResponse)
 async def root():

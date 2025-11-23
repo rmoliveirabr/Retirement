@@ -75,6 +75,13 @@ export const retirementApi = {
   },
 };
 
+// AI API
+export const askAI = async (question: string, profile: any, results: any[], history: any[] = []) => {
+  const payload = { question, profile, results, history };
+  const response = await axios.post(`/api/retirement/ask-ai`, payload);
+  return response.data; // { answer: "..." } 
+};
+
 // Health check API
 export const healthApi = {
   check: async () => {
@@ -84,7 +91,3 @@ export const healthApi = {
 };
 
 export default api;
-
-
-
-
