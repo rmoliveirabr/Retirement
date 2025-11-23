@@ -53,6 +53,30 @@
   font-weight: 600;
 }
 
+.badge-input {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--color-foreground);
+  font-weight: 600;
+  font-size: 1rem;
+  width: 60px;
+  padding: 0.1rem 0.25rem;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.badge-input:hover {
+  border-color: var(--color-border);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.badge-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: white;
+}
+
 .App-main {
   flex: 1;
   padding: 2rem;

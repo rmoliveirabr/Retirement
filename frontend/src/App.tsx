@@ -28,22 +28,22 @@ function App() {
   const [readiness, setReadiness] = useState<RetirementReadiness | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [apiData, setApiData] = useState<ApiResponse | null>(null);
-  const [healthData, setHealthData] = useState<HealthResponse | null>(null);
+  // const [apiData, setApiData] = useState<ApiResponse | null>(null);
+  // const [healthData, setHealthData] = useState<HealthResponse | null>(null);
   const [targetAge, setTargetAge] = useState<number>(100);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [welcomeResponse, healthResponse, profilesResponse] = await Promise.all([
+        const [, , profilesResponse] = await Promise.all([
           healthApi.check(),
           healthApi.check(),
           profileApi.getAll().catch(() => []) // Don't fail if profiles can't be loaded
         ]);
 
-        setApiData(welcomeResponse);
-        setHealthData(healthResponse);
+        // setApiData(welcomeResponse);
+        // setHealthData(healthResponse);
         setProfiles(profilesResponse);
         setError(null);
       } catch (err) {
@@ -256,8 +256,16 @@ function App() {
             <p>Planeje seu futuro financeiro com confiança</p>
           </div>
           <div className="target-age-badge">
-            <span className="badge-label">Idade Alvo:</span>
-            <span className="badge-value">{targetAge}</span>
+            <label htmlFor="target-age-input" className="badge-label">Idade Alvo:</label>
+            <input
+              id="target-age-input"
+              type="number"
+              className="badge-input"
+              value={targetAge}
+              onChange={(e) => setTargetAge(Number(e.target.value))}
+              min="50"
+              max="120"
+            />
           </div>
         </div>
       </header>

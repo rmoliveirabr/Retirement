@@ -1,2 +1,9 @@
-- simulação - campo com 1, quando tendo editar e fica 0, ele trava o 0 e se digito 5, fica 05
-- 
+- **Prepare for Hosting**: Dockerize all three components (Frontend, Backend, and json-server) into separate containers, then use Docker Compose to manage them.
+- **Authentication**: User login and session management
+- **Real Database**: PostgreSQL or MongoDB integration
+- **Advanced Calculations**: Monte Carlo simulations, tax optimization
+- **Data Visualization**: Charts and graphs for projections
+- **Export Features**: PDF reports, Excel exports
+- **Mobile App**: React Native version
+- **Testing**: Unit and integration tests
+- **Deployment**: Cloud hosting
