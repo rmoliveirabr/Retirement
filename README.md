@@ -1,17 +1,37 @@
 # Retirement Planning Application
 
-A comprehensive full-stack application for retirement planning with profile management, calculations, and analysis. Built with Python FastAPI backend, React TypeScript frontend, and JSON Server database.
+> **🚀 Backend Migration Complete!** The backend has been refactored from FastAPI (Python) to **NestJS (TypeScript)** for a standardized, type-safe stack. See [NESTJS_MIGRATION.md](NESTJS_MIGRATION.md) for details.
+
+A comprehensive full-stack application for retirement planning with profile management, calculations, and analysis. Built with NestJS TypeScript backend, React TypeScript frontend, and JSON Server database.
 
 ## Project Structure
 
 ```
 Retirement/
-├── backend/
-│   ├── main.py                    # FastAPI application with CRUD endpoints
-│   ├── models.py                  # Pydantic data models
-│   ├── retirement_calculator.py   # Retirement calculation logic
-│   ├── config.env                 # Environment configuration
-│   └── requirements.txt           # Python dependencies
+├── backend-nestjs/
+│   ├── src/
+│   │   ├── profiles/              # Profile CRUD module
+│   │   │   ├── dto/               # Data Transfer Objects
+│   │   │   ├── entities/          # Profile entity
+│   │   │   ├── profiles.controller.ts
+│   │   │   ├── profiles.service.ts
+│   │   │   └── profiles.module.ts
+│   │   ├── retirement/            # Retirement calculations module
+│   │   │   ├── dto/               # Calculation DTOs
+│   │   │   ├── retirement-calculator.service.ts
+│   │   │   ├── retirement.controller.ts
+│   │   │   └── retirement.module.ts
+│   │   ├── ai/                    # AI assistant module
+│   │   │   ├── dto/               # AI request DTOs
+│   │   │   ├── ai.service.ts
+│   │   │   ├── ai.controller.ts
+│   │   │   └── ai.module.ts
+│   │   ├── app.module.ts          # Main application module
+│   │   └── main.ts                # Application entry point
+│   ├── Dockerfile                 # Production Docker configuration
+│   ├── Dockerfile.dev             # Development Docker configuration
+│   ├── package.json               # Node.js dependencies
+│   └── tsconfig.json              # TypeScript configuration
 ├── frontend/
 │   ├── public/
 │   │   └── index.html             # HTML template
@@ -40,8 +60,7 @@ Retirement/
 ## Getting Started
 
 ### Prerequisites
-- Node.js 16+ and npm
-- Python 3.8+
+- Node.js 20+ and npm
 - Git
 
 ### Database Setup (JSON Server)
@@ -63,32 +82,28 @@ Retirement/
 
 The database will be available at `http://localhost:3001`
 
-### Backend Setup
+### Backend Setup (NestJS)
 
 1. Navigate to the backend directory:
    ```bash
-   cd backend
+   cd backend-nestjs
    ```
 
-2. Create a virtual environment (recommended):
+2. Install dependencies:
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   npm install
    ```
 
-3. Install dependencies:
+3. Copy the environment configuration:
    ```bash
-   pip install -r requirements.txt
+   cp .env.example .env
    ```
 
-4. Copy the environment configuration:
-   ```bash
-   cp config.env .env
-   ```
+4. Update the `.env` file with your configuration (especially `OPENAI_API_KEY`)
 
-5. Run the FastAPI server:
+5. Run the NestJS server:
    ```bash
-   python main.py
+   npm run start:dev
    ```
 
 The backend will be available at `http://localhost:8000`
@@ -114,14 +129,16 @@ The frontend will be available at `http://localhost:3000`
 
 ## Features
 
-### Backend (FastAPI)
+### Backend (NestJS + TypeScript)
 - **Profile Management**: Complete CRUD operations for user profiles
 - **Retirement Calculations**: Advanced retirement planning algorithms
-- **Data Validation**: Comprehensive input validation with Pydantic
-- **API Documentation**: Auto-generated OpenAPI/Swagger docs
+- **Data Validation**: Comprehensive input validation with class-validator
+- **API Documentation**: Auto-generated Swagger/OpenAPI docs (coming soon)
 - **Error Handling**: Robust error handling and HTTP status codes
 - **AI Assistant**: Context-aware financial advice using OpenAI (GPT-4)
 - **CORS Configuration**: Cross-origin resource sharing setup
+- **Modular Architecture**: Clean separation of concerns with NestJS modules
+- **Type Safety**: Full TypeScript implementation for reliability
 
 ### Frontend (React + TypeScript)
 - **Profile Management**: Create, edit, delete, and view profiles
@@ -179,12 +196,12 @@ The application provides:
 ## Technologies Used
 
 ### Backend
-- **Python 3.8+**: Core language
-- **FastAPI**: Modern web framework
-- **Pydantic**: Data validation and serialization
-- **Uvicorn**: ASGI server
-- **httpx**: HTTP client for JSON Server communication
-- **python-dotenv**: Environment variable management
+- **Node.js 20+**: Runtime environment
+- **NestJS**: Progressive Node.js framework
+- **TypeScript**: Type-safe JavaScript
+- **class-validator**: Data validation and transformation
+- **Axios**: HTTP client for JSON Server communication
+- **OpenAI SDK**: AI assistant integration
 
 ### Frontend
 - **React 18**: UI library with hooks
@@ -199,7 +216,7 @@ The application provides:
 ## Development Workflow
 
 1. **Start JSON Server**: `cd database && npm start`
-2. **Start Backend**: `cd backend && python main.py`
+2. **Start Backend**: `cd backend-nestjs && npm run start:dev`
 3. **Start Frontend**: `cd frontend && npm start`
 4. **Access Application**: Open `http://localhost:3000`
 

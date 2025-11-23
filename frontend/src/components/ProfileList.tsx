@@ -78,10 +78,10 @@ const ProfileList: React.FC<ProfileListProps> = ({
               <div className="email-block">
                 <div className="email-label">Email: {profile.email}</div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
-                  <div className="age-badge">Idade: {profile.base_age}</div>
-                  {profile.last_calculation && (
+                  <div className="age-badge">Idade: {profile.baseAge}</div>
+                  {profile.lastCalculation && (
                     <span className="last-calc-date">
-                      📅 {formatDate(profile.last_calculation)}
+                      📅 {formatDate(profile.lastCalculation)}
                     </span>
                   )}
                 </div>
@@ -118,19 +118,19 @@ const ProfileList: React.FC<ProfileListProps> = ({
               <div className="profile-stats-grid">
                 <div className="stat-item">
                   <span className="stat-label">Ativos Totais</span>
-                  <span className="stat-value">{formatCurrency(profile.total_assets)}</span>
+                  <span className="stat-value">{formatCurrency(profile.totalAssets)}</span>
                 </div>
                 <div className="stat-item">
                   <span className="stat-label">Salário Mensal</span>
-                  <span className="stat-value">{formatCurrency(profile.monthly_salary_net)}</span>
+                  <span className="stat-value">{formatCurrency(profile.monthlySalaryNet)}</span>
                 </div>
                 <div className="stat-item">
                   <span className="stat-label">Despesas Mensais</span>
-                  <span className="stat-value">{formatCurrency(profile.monthly_expense_recurring + profile.rent)}</span>
+                  <span className="stat-value">{formatCurrency(profile.monthlyExpenseRecurring + profile.rent)}</span>
                 </div>
                 <div className="stat-item">
                   <span className="stat-label">Poupança Mensal</span>
-                  <span className="stat-value savings">{formatCurrency(profile.monthly_salary_net - (profile.monthly_expense_recurring + profile.rent))}</span>
+                  <span className="stat-value savings">{formatCurrency(profile.monthlySalaryNet - (profile.monthlyExpenseRecurring + profile.rent))}</span>
                 </div>
               </div>
 
@@ -138,11 +138,11 @@ const ProfileList: React.FC<ProfileListProps> = ({
               <div className="profile-details">
                 <div className="detail-row">
                   <span className="detail-label">Taxa de Retorno do Investimento</span>
-                  <span className="detail-value">{(profile.monthly_return_rate * 100).toFixed(2)}%</span>
+                  <span className="detail-value">{(profile.monthlyReturnRate * 100).toFixed(2)}%</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Aposentadoria do Governo em</span>
-                  <span className="detail-value">{(profile as any).government_retirement_start_years ?? 0} anos</span>
+                  <span className="detail-value">{profile.governmentRetirementStartYears ?? 0} anos</span>
                 </div>
               </div>
 

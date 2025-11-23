@@ -29,19 +29,19 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('simulator');
   const [simulationParams, setSimulationParams] = useState({
-    totalAssets: profile.total_assets || 0,
-    fixedAssets: profile.fixed_assets || 0,
-    fixedAssetsGrowthRate: profile.fixed_assets_growth_rate || 0,
-    monthlyNetSalary: profile.monthly_salary_net || 0,
-    govPension: profile.government_retirement_income || 0,
-    yearsUntilSalaryEnds: profile.end_of_salary_years || 0,
-    yearsUntilGovRetirement: profile.government_retirement_start_years || 0,
-    monthlyExpenses: profile.monthly_expense_recurring || 0,
+    totalAssets: profile.totalAssets || 0,
+    fixedAssets: profile.fixedAssets || 0,
+    fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
+    monthlyNetSalary: profile.monthlySalaryNet || 0,
+    govPension: profile.governmentRetirementIncome || 0,
+    yearsUntilSalaryEnds: profile.endOfSalaryYears || 0,
+    yearsUntilGovRetirement: profile.governmentRetirementStartYears || 0,
+    monthlyExpenses: profile.monthlyExpenseRecurring || 0,
     monthlyRent: profile.rent || 0,
-    oneTimeExpenses: profile.one_time_annual_expense || 0,
-    monthlyReturnRate: profile.monthly_return_rate || 0,
-    investmentTaxRate: profile.investment_tax_rate || 0,
-    annualInflation: profile.annual_inflation || 0,
+    oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
+    monthlyReturnRate: profile.monthlyReturnRate || 0,
+    investmentTaxRate: profile.investmentTaxRate || 0,
+    annualInflation: profile.annualInflation || 0,
   });
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -53,19 +53,19 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const [percentInput, setPercentInput] = useState<Record<string, string>>({});
 
   const initialParams = {
-    totalAssets: profile.total_assets || 0,
-    fixedAssets: profile.fixed_assets || 0,
-    fixedAssetsGrowthRate: profile.fixed_assets_growth_rate || 0,
-    monthlyNetSalary: profile.monthly_salary_net || 0,
-    govPension: profile.government_retirement_income || 0,
-    yearsUntilSalaryEnds: profile.end_of_salary_years || 0,
-    yearsUntilGovRetirement: profile.government_retirement_start_years || 0,
-    monthlyExpenses: profile.monthly_expense_recurring || 0,
+    totalAssets: profile.totalAssets || 0,
+    fixedAssets: profile.fixedAssets || 0,
+    fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
+    monthlyNetSalary: profile.monthlySalaryNet || 0,
+    govPension: profile.governmentRetirementIncome || 0,
+    yearsUntilSalaryEnds: profile.endOfSalaryYears || 0,
+    yearsUntilGovRetirement: profile.governmentRetirementStartYears || 0,
+    monthlyExpenses: profile.monthlyExpenseRecurring || 0,
     monthlyRent: profile.rent || 0,
-    oneTimeExpenses: profile.one_time_annual_expense || 0,
-    monthlyReturnRate: profile.monthly_return_rate || 0,
-    investmentTaxRate: profile.investment_tax_rate || 0,
-    annualInflation: profile.annual_inflation || 0,
+    oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
+    monthlyReturnRate: profile.monthlyReturnRate || 0,
+    investmentTaxRate: profile.investmentTaxRate || 0,
+    annualInflation: profile.annualInflation || 0,
   };
 
   const handleInputChange = (field: string, value: string | number) => {
@@ -157,19 +157,19 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const handleSaveToProfile = async () => {
     const updatedProfile = {
       ...profile,
-      total_assets: simulationParams.totalAssets,
-      fixed_assets: simulationParams.fixedAssets,
-      fixed_assets_growth_rate: simulationParams.fixedAssetsGrowthRate,
-      monthly_salary_net: simulationParams.monthlyNetSalary,
-      government_retirement_income: simulationParams.govPension,
-      end_of_salary_years: simulationParams.yearsUntilSalaryEnds,
-      government_retirement_start_years: simulationParams.yearsUntilGovRetirement,
-      monthly_expense_recurring: simulationParams.monthlyExpenses,
+      totalAssets: simulationParams.totalAssets,
+      fixedAssets: simulationParams.fixedAssets,
+      fixedAssetsGrowthRate: simulationParams.fixedAssetsGrowthRate,
+      monthlySalaryNet: simulationParams.monthlyNetSalary,
+      governmentRetirementIncome: simulationParams.govPension,
+      endOfSalaryYears: simulationParams.yearsUntilSalaryEnds,
+      governmentRetirementStartYears: simulationParams.yearsUntilGovRetirement,
+      monthlyExpenseRecurring: simulationParams.monthlyExpenses,
       rent: simulationParams.monthlyRent,
-      one_time_annual_expense: simulationParams.oneTimeExpenses,
-      monthly_return_rate: simulationParams.monthlyReturnRate,
-      investment_tax_rate: simulationParams.investmentTaxRate,
-      annual_inflation: simulationParams.annualInflation,
+      oneTimeAnnualExpense: simulationParams.oneTimeExpenses,
+      monthlyReturnRate: simulationParams.monthlyReturnRate,
+      investmentTaxRate: simulationParams.investmentTaxRate,
+      annualInflation: simulationParams.annualInflation,
     };
 
     if (onSaveProfileAndRecalculate) {
@@ -181,19 +181,19 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
   useEffect(() => {
     setSimulationParams({
-      totalAssets: profile.total_assets || 0,
-      fixedAssets: profile.fixed_assets || 0,
-      fixedAssetsGrowthRate: profile.fixed_assets_growth_rate || 0,
-      monthlyNetSalary: profile.monthly_salary_net || 0,
-      govPension: profile.government_retirement_income || 0,
-      yearsUntilSalaryEnds: profile.end_of_salary_years || 0,
-      yearsUntilGovRetirement: profile.government_retirement_start_years || 0,
-      monthlyExpenses: profile.monthly_expense_recurring || 0,
+      totalAssets: profile.totalAssets || 0,
+      fixedAssets: profile.fixedAssets || 0,
+      fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
+      monthlyNetSalary: profile.monthlySalaryNet || 0,
+      govPension: profile.governmentRetirementIncome || 0,
+      yearsUntilSalaryEnds: profile.endOfSalaryYears || 0,
+      yearsUntilGovRetirement: profile.governmentRetirementStartYears || 0,
+      monthlyExpenses: profile.monthlyExpenseRecurring || 0,
       monthlyRent: profile.rent || 0,
-      oneTimeExpenses: profile.one_time_annual_expense || 0,
-      monthlyReturnRate: profile.monthly_return_rate || 0,
-      investmentTaxRate: profile.investment_tax_rate || 0,
-      annualInflation: profile.annual_inflation || 0,
+      oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
+      monthlyReturnRate: profile.monthlyReturnRate || 0,
+      investmentTaxRate: profile.investmentTaxRate || 0,
+      annualInflation: profile.annualInflation || 0,
     });
   }, [profile]);
 

@@ -267,7 +267,7 @@
 .simulator-container {
   background: var(--color-card);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow-x: auto;
   width: 100%;
   margin: 0;
   padding: 0;

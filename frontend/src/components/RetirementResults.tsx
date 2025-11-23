@@ -130,11 +130,11 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
     : (lastIndex >= 0 ? Number(timeline[lastIndex].year) : 0);
   const ageWhenFundsDeplete = depletionIndex >= 0
     ? Number(timeline[depletionIndex].age)
-    : (lastIndex >= 0 ? Number(timeline[lastIndex].age) : (profile?.base_age ?? 0));
+    : (lastIndex >= 0 ? Number(timeline[lastIndex].age) : (profile?.baseAge ?? 0));
 
   // Get Fixed Assets value at retirement from calculation (Issue #4 fix)
-  const fixedAssetsAtRetirement = activeCalculation?.assumptions.fixed_assets_at_retirement ?? 0;
-  const fixedAssetsGrowthRate = activeCalculation?.assumptions.fixed_assets_growth_rate ?? 0.04;
+  const fixedAssetsAtRetirement = activeCalculation?.assumptions.fixedAssetsAtRetirement ?? 0;
+  const fixedAssetsGrowthRate = activeCalculation?.assumptions.fixedAssetsGrowthRate ?? 0.04;
 
   // Handler for when scenario is calculated
   const handleScenarioCalculated = (scenarioCalculation: RetirementCalculation) => {
@@ -199,19 +199,19 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
                       r="40"
                       className="score-progress"
                       style={{
-                        stroke: getReadinessColor(readiness.readiness_score),
+                        stroke: getReadinessColor(readiness.readinessScore),
                         strokeDasharray: `${2 * Math.PI * 40}`,
-                        strokeDashoffset: `${2 * Math.PI * 40 * (1 - readiness.readiness_score / 100)}`
+                        strokeDashoffset: `${2 * Math.PI * 40 * (1 - readiness.readinessScore / 100)}`
                       }}
                     />
                   </svg>
                   <div className="score-value">
-                    <span className="score-number">{readiness.readiness_score.toFixed(0)}</span>
+                    <span className="score-number">{readiness.readinessScore.toFixed(0)}</span>
                   </div>
                 </div>
                 <div className="score-details">
-                  <h3 className="score-label" style={{ color: getReadinessColor(readiness.readiness_score) }}>
-                    {getReadinessLabel(readiness.readiness_score)}
+                  <h3 className="score-label" style={{ color: getReadinessColor(readiness.readinessScore) }}>
+                    {getReadinessLabel(readiness.readinessScore)}
                   </h3>
                   <p className="score-description">Baseado no seu perfil financeiro e projeções</p>
                 </div>
@@ -272,7 +272,7 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
                     <h4 className="card-title">Fundo Inicial de Aposentadoria</h4>
                   </div>
                   <div className="card-content">
-                    <p className="card-value primary">{formatCurrency0(activeCalculation.total_retirement_fund)}</p>
+                    <p className="card-value primary">{formatCurrency0(activeCalculation.totalRetirementFund)}</p>
                     <p className="card-description">Valor projetado na aposentadoria</p>
                   </div>
                 </div>

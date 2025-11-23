@@ -102,10 +102,10 @@ function App() {
       setLoading(true);
       const [calculationResult, readinessResult] = await Promise.all([
         retirementApi.calculate({
-          profile_id: profile.id,
-          expected_return_rate: 0.07,
-          retirement_duration_years: 25,
-          target_age: targetAge
+          profileId: profile.id,
+          expectedReturnRate: 0.07,
+          retirementDurationYears: 25,
+          targetAge: targetAge
         }),
         retirementApi.getReadiness(profile.id, 0.07)
       ]);
@@ -155,24 +155,24 @@ function App() {
 
   const handleCalculateScenario = async (profile: Profile, scenarioParams: any): Promise<RetirementCalculation> => {
     const calculationResult = await retirementApi.calculateScenario({
-      profile_id: profile.id,
-      expected_return_rate: 0.07,
-      retirement_duration_years: 25,
-      target_age: targetAge,
+      profileId: profile.id,
+      expectedReturnRate: 0.07,
+      retirementDurationYears: 25,
+      targetAge: targetAge,
       // Override with scenario parameters
-      total_assets: scenarioParams.totalAssets,
-      fixed_assets: scenarioParams.fixedAssets,
-      monthly_salary_net: scenarioParams.monthlyNetSalary,
-      government_retirement_income: scenarioParams.govPension,
-      monthly_return_rate: scenarioParams.monthlyReturnRate,
-      fixed_assets_growth_rate: scenarioParams.fixedAssetsGrowthRate,
-      investment_tax_rate: scenarioParams.investmentTaxRate,
-      end_of_salary_years: scenarioParams.yearsUntilSalaryEnds,
-      government_retirement_start_years: scenarioParams.yearsUntilGovRetirement,
-      monthly_expense_recurring: scenarioParams.monthlyExpenses,
+      totalAssets: scenarioParams.totalAssets,
+      fixedAssets: scenarioParams.fixedAssets,
+      monthlySalaryNet: scenarioParams.monthlyNetSalary,
+      governmentRetirementIncome: scenarioParams.govPension,
+      monthlyReturnRate: scenarioParams.monthlyReturnRate,
+      fixedAssetsGrowthRate: scenarioParams.fixedAssetsGrowthRate,
+      investmentTaxRate: scenarioParams.investmentTaxRate,
+      endOfSalaryYears: scenarioParams.yearsUntilSalaryEnds,
+      governmentRetirementStartYears: scenarioParams.yearsUntilGovRetirement,
+      monthlyExpenseRecurring: scenarioParams.monthlyExpenses,
       rent: scenarioParams.monthlyRent,
-      one_time_annual_expense: scenarioParams.oneTimeExpenses,
-      annual_inflation: scenarioParams.annualInflation,
+      oneTimeAnnualExpense: scenarioParams.oneTimeExpenses,
+      annualInflation: scenarioParams.annualInflation,
     });
 
     return calculationResult;
@@ -193,22 +193,22 @@ function App() {
       // Save the profile to backend
       const savedProfile = await profileApi.update(selectedProfile.id, {
         email: updatedProfile.email,
-        base_age: updatedProfile.base_age,
-        total_assets: updatedProfile.total_assets,
-        fixed_assets: updatedProfile.fixed_assets,
-        monthly_salary_net: updatedProfile.monthly_salary_net,
-        government_retirement_income: updatedProfile.government_retirement_income,
-        government_retirement_start_years: updatedProfile.government_retirement_start_years,
-        government_retirement_adjustment: updatedProfile.government_retirement_adjustment,
-        monthly_return_rate: updatedProfile.monthly_return_rate,
-        fixed_assets_growth_rate: updatedProfile.fixed_assets_growth_rate,
-        investment_tax_rate: updatedProfile.investment_tax_rate,
-        investment_taxable_percentage: updatedProfile.investment_taxable_percentage,
-        end_of_salary_years: updatedProfile.end_of_salary_years,
-        monthly_expense_recurring: updatedProfile.monthly_expense_recurring,
+        baseAge: updatedProfile.baseAge,
+        totalAssets: updatedProfile.totalAssets,
+        fixedAssets: updatedProfile.fixedAssets,
+        monthlySalaryNet: updatedProfile.monthlySalaryNet,
+        governmentRetirementIncome: updatedProfile.governmentRetirementIncome,
+        governmentRetirementStartYears: updatedProfile.governmentRetirementStartYears,
+        governmentRetirementAdjustment: updatedProfile.governmentRetirementAdjustment,
+        monthlyReturnRate: updatedProfile.monthlyReturnRate,
+        fixedAssetsGrowthRate: updatedProfile.fixedAssetsGrowthRate,
+        investmentTaxRate: updatedProfile.investmentTaxRate,
+        investmentTaxablePercentage: updatedProfile.investmentTaxablePercentage,
+        endOfSalaryYears: updatedProfile.endOfSalaryYears,
+        monthlyExpenseRecurring: updatedProfile.monthlyExpenseRecurring,
         rent: updatedProfile.rent,
-        one_time_annual_expense: updatedProfile.one_time_annual_expense,
-        annual_inflation: updatedProfile.annual_inflation,
+        oneTimeAnnualExpense: updatedProfile.oneTimeAnnualExpense,
+        annualInflation: updatedProfile.annualInflation,
       });
 
       // Update local state
@@ -218,10 +218,10 @@ function App() {
       // Recalculate with the updated profile
       const [calculationResult, readinessResult] = await Promise.all([
         retirementApi.calculate({
-          profile_id: savedProfile.id,
-          expected_return_rate: 0.07,
-          retirement_duration_years: 25,
-          target_age: targetAge
+          profileId: savedProfile.id,
+          expectedReturnRate: 0.07,
+          retirementDurationYears: 25,
+          targetAge: targetAge
         }),
         retirementApi.getReadiness(savedProfile.id, 0.07)
       ]);

@@ -49,7 +49,7 @@ export const profileApi = {
 
   // Clone profile (returns ProfileCreate data with empty email)
   clone: async (id: number): Promise<ProfileCreate> => {
-    const response = await api.post(`/api/profiles/${id}/clone`);
+    const response = await api.get(`/api/profiles/${id}/clone`);
     return response.data;
   },
 };
@@ -78,7 +78,7 @@ export const retirementApi = {
 // AI API
 export const askAI = async (question: string, profile: any, results: any[], history: any[] = []) => {
   const payload = { question, profile, results, history };
-  const response = await axios.post(`/api/retirement/ask-ai`, payload);
+  const response = await api.post(`/api/ai/ask`, payload);
   return response.data; // { answer: "..." } 
 };
 
