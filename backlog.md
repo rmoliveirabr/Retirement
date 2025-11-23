@@ -1,3 +1,6 @@
+## To Fix
+- When making simulations, it's not stopping the calculation when the money finishes
+
 ## Pending
 - **Authentication**: User login and session management
 - **Real Database**: PostgreSQL or MongoDB integration
