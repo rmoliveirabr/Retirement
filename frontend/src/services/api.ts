@@ -1,11 +1,12 @@
 import axios from 'axios';
 import { Profile, ProfileCreate, ProfileUpdate, RetirementCalculation, CalculationRequest, RetirementReadiness, ScenarioRequest } from '../types';
 
-// In production, if REACT_APP_API_URL is not set, we use relative paths (proxy)
+// In production, we FORCE relative paths to use Vercel Rewrites and bypass CORS/Auth issues
 // In development, we default to localhost
 const isDevelopment = process.env.NODE_ENV === 'development';
-const API_BASE_URL = process.env.REACT_APP_API_URL || (isDevelopment ? 'http://localhost:8000' : '');
-console.log('🔌 API Base URL:', API_BASE_URL || '(Relative Path)');
+// FORCE relative path in production even if env var is set (to override Vercel Dashboard settings)
+const API_BASE_URL = isDevelopment ? (process.env.REACT_APP_API_URL || 'http://localhost:8000') : '';
+console.log('🔌 API Base URL:', API_BASE_URL || '(Relative Path - Proxy Active)');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
