@@ -201,7 +201,8 @@ dist
 
 # Gatsby files
 .cache/
-public
+# public - COMMENTED OUT to allow frontend/public/index.html
+# If using Gatsby, be more specific: /gatsby-site/public
 
 # Storybook build outputs
 .out
@@ -283,7 +284,3 @@ database/db.json
 # Build outputs
 build/
 dist/
-
-
-
-
