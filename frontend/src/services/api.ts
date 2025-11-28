@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { Profile, ProfileCreate, ProfileUpdate, RetirementCalculation, CalculationRequest, RetirementReadiness, ScenarioRequest } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-console.log('🔌 API Base URL:', API_BASE_URL);
+// In production, if REACT_APP_API_URL is not set, we use relative paths (proxy)
+// In development, we default to localhost
+const isDevelopment = process.env.NODE_ENV === 'development';
+const API_BASE_URL = process.env.REACT_APP_API_URL || (isDevelopment ? 'http://localhost:8000' : '');
+console.log('🔌 API Base URL:', API_BASE_URL || '(Relative Path)');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
