@@ -330,6 +330,9 @@ function App() {
 
       <footer className="App-footer">
         <p>© 2025 Planejamento de Aposentadoria.</p>
+        <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '10px' }}>
+          API: {process.env.REACT_APP_API_URL || 'Localhost'}
+        </p>
       </footer>
     </div>
   );
