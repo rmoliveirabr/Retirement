@@ -36,19 +36,34 @@ function App() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [, , profilesResponse] = await Promise.all([
-          healthApi.check(),
-          healthApi.check(),
-          profileApi.getAll().catch(() => []) // Don't fail if profiles can't be loaded
+        const [healthResponse1, healthResponse2, profilesResponse] = await Promise.all([
+          healthApi.check().catch(err => {
+            console.error('Health check 1 failed:', err);
+            return null;
+          }),
+          healthApi.check().catch(err => {
+            console.error('Health check 2 failed:', err);
+            return null;
+          }),
+          profileApi.getAll().catch(err => {
+            console.error('Profile fetch failed:', err);
+            return [];
+          })
         ]);
 
-        // setApiData(welcomeResponse);
-        // setHealthData(healthResponse);
-        setProfiles(profilesResponse);
+        console.log('Health check 1:', healthResponse1);
+        console.log('Health check 2:', healthResponse2);
+        console.log('Profiles response:', profilesResponse);
+        console.log('Is profiles an array?', Array.isArray(profilesResponse));
+
+        // Defensive: ensure profiles is always an array
+        const validProfiles = Array.isArray(profilesResponse) ? profilesResponse : [];
+        setProfiles(validProfiles);
         setError(null);
       } catch (err) {
         setError('Failed to connect to the backend API. Please try again later.');
         console.error('API Error:', err);
+        setProfiles([]); // Ensure profiles is always an array
       } finally {
         setLoading(false);
       }
