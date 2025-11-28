@@ -6,16 +6,28 @@ async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
 
-    const frontendOrigin = process.env.CORS_ORIGIN || 'https://retirement-frontend-git-main-rodrigo-machado-oliveiras-projects.vercel.app';
-
     // Enable CORS
     app.enableCors({
-      origin: frontendOrigin,
+      origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = [
+          'http://localhost:3000',
+          'http://localhost:8000',
+        ];
+
+        // Allow allowed origins and ANY Vercel deployment (frontend)
+        if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+          callback(null, true);
+        } else {
+          console.log('Blocked CORS origin:', origin);
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      //allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-      //preflightContinue: false,
-      //optionsSuccessStatus: 204,
+      allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With',
     });
 
     // Enable validation
