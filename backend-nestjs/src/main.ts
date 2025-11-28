@@ -8,13 +8,24 @@ async function bootstrap() {
 
     // Enable CORS
     app.enableCors({
-      origin: process.env.CORS_ORIGINS?.split(',') || [
-        'http://localhost:3000',
-        'http://localhost:80',
-      ],
+      origin: (origin, callback) => {
+        const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || [
+          'http://localhost:3000',
+          'http://localhost:80',
+        ];
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        // Allow allowed origins and any Vercel deployment
+        if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     });
 
     // Enable validation
