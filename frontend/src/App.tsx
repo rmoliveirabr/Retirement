@@ -47,7 +47,7 @@ function App() {
         setProfiles(profilesResponse);
         setError(null);
       } catch (err) {
-        setError('Failed to connect to the backend API. Make sure the server is running on port 8000.');
+        setError('Failed to connect to the backend API. Please try again later.');
         console.error('API Error:', err);
       } finally {
         setLoading(false);

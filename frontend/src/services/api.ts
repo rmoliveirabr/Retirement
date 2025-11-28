@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Profile, ProfileCreate, ProfileUpdate, RetirementCalculation, CalculationRequest, RetirementReadiness, ScenarioRequest } from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+console.log('🔌 API Base URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
