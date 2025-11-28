@@ -6,11 +6,13 @@ async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
 
+    const frontendOrigin = process.env.CORS_ORIGIN || 'https://retirement-frontend-git-main-rodrigo-machado-oliveiras-projects.vercel.app';
+
     // Enable CORS
     app.enableCors({
-      origin: true, // Reflects the request origin
+      origin: frontendOrigin,
       credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
       preflightContinue: false,
       optionsSuccessStatus: 204,
@@ -21,9 +23,9 @@ async function bootstrap() {
       new ValidationPipe({
         transform: true,
         whitelist: true,
-        forbidNonWhitelisted: false, // Allow extra properties from frontend
+        forbidNonWhitelisted: false,
         transformOptions: {
-          enableImplicitConversion: true, // Auto-convert string numbers to numbers
+          enableImplicitConversion: true,
         },
       }),
     );
