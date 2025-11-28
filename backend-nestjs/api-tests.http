@@ -1,0 +1,175 @@
+### Retirement Planning API - REST Client Tests
+### Base URL
+@baseUrl = http://localhost:8000
+@profileId = YOUR_PROFILE_ID_HERE
+
+###############################################################################
+# Health & Status Endpoints
+###############################################################################
+
+### Get API Welcome
+GET {{baseUrl}}/ HTTP/1.1
+
+### Get Health Status
+GET {{baseUrl}}/health HTTP/1.1
+
+### Get Retirement Service Status
+GET {{baseUrl}}/api/retirement/status HTTP/1.1
+
+###############################################################################
+# Profile Management
+###############################################################################
+
+### Get All Profiles
+GET {{baseUrl}}/api/profiles HTTP/1.1
+
+### Get Profile by ID
+GET {{baseUrl}}/api/profiles/{{profileId}} HTTP/1.1
+
+### Get Profile by Email
+GET {{baseUrl}}/api/profiles/email/user@example.com HTTP/1.1
+
+### Create New Profile
+POST {{baseUrl}}/api/profiles HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "baseAge": 51,
+  "startDate": "2026-01-01",
+  "totalAssets": 1000000,
+  "fixedAssets": 0,
+  "monthlySalaryNet": 10000,
+  "governmentRetirementIncome": 5000,
+  "monthlyReturnRate": 0.008,
+  "fixedAssetsGrowthRate": 0.04,
+  "investmentTaxRate": 0.15,
+  "investmentTaxablePercentage": 1,
+  "endOfSalaryYears": 10,
+  "governmentRetirementStartYears": 20,
+  "governmentRetirementAdjustment": 0.0477,
+  "monthlyExpenseRecurring": 8000,
+  "rent": 0,
+  "oneTimeAnnualExpense": 0,
+  "annualInflation": 0.05
+}
+
+### Update Profile
+PUT {{baseUrl}}/api/profiles/{{profileId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "monthlyExpenseRecurring": 9000,
+  "totalAssets": 1100000
+}
+
+### Clone Profile
+GET {{baseUrl}}/api/profiles/{{profileId}}/clone HTTP/1.1
+
+### Delete Profile
+DELETE {{baseUrl}}/api/profiles/{{profileId}} HTTP/1.1
+
+###############################################################################
+# Retirement Calculations
+###############################################################################
+
+### Calculate Retirement Plan
+POST {{baseUrl}}/api/retirement/calculate HTTP/1.1
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "expectedReturnRate": 0.07,
+  "retirementDurationYears": 25,
+  "targetAge": 100
+}
+
+### Get Retirement Readiness
+GET {{baseUrl}}/api/retirement/readiness/{{profileId}}?expected_return_rate=0.07 HTTP/1.1
+
+### Calculate Scenario (What-If Analysis)
+POST {{baseUrl}}/api/retirement/scenario HTTP/1.1
+Content-Type: application/json
+
+{
+  "profileId": "{{profileId}}",
+  "expectedReturnRate": 0.07,
+  "retirementDurationYears": 25,
+  "targetAge": 100,
+  "totalAssets": 1200000,
+  "monthlyExpenseRecurring": 7000,
+  "monthlyReturnRate": 0.01
+}
+
+###############################################################################
+# AI Assistant
+###############################################################################
+
+### Ask AI for Retirement Advice
+POST {{baseUrl}}/api/ai/ask HTTP/1.1
+Content-Type: application/json
+
+{
+  "profile": {
+    "email": "test@example.com",
+    "baseAge": 51,
+    "totalAssets": 1000000,
+    "monthlySalaryNet": 10000,
+    "monthlyExpenseRecurring": 8000,
+    "governmentRetirementIncome": 5000
+  },
+  "results": {
+    "retirement_readiness": {
+      "is_ready": true,
+      "years_until_ready": 0,
+      "shortfall": 0
+    },
+    "assumptions": {
+      "timeline": []
+    }
+  },
+  "question": "What can I do to improve my retirement plan?",
+  "history": []
+}
+
+###############################################################################
+# Example: Complete Workflow
+###############################################################################
+
+### 1. Create a new profile
+# @name createProfile
+POST {{baseUrl}}/api/profiles HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "workflow@example.com",
+  "baseAge": 45,
+  "startDate": "2026-01-01",
+  "totalAssets": 500000,
+  "fixedAssets": 200000,
+  "monthlySalaryNet": 8000,
+  "governmentRetirementIncome": 3000,
+  "monthlyReturnRate": 0.007,
+  "fixedAssetsGrowthRate": 0.04,
+  "investmentTaxRate": 0.15,
+  "investmentTaxablePercentage": 1,
+  "endOfSalaryYears": 15,
+  "governmentRetirementStartYears": 25,
+  "governmentRetirementAdjustment": 0.045,
+  "monthlyExpenseRecurring": 6000,
+  "rent": 1500,
+  "oneTimeAnnualExpense": 5000,
+  "annualInflation": 0.045
+}
+
+### 2. Calculate retirement for the created profile
+# Use the ID from the response above
+POST {{baseUrl}}/api/retirement/calculate HTTP/1.1
+Content-Type: application/json
+
+{
+  "profileId": "{{createProfile.response.body.id}}",
+  "expectedReturnRate": 0.08,
+  "retirementDurationYears": 30,
+  "targetAge": 95
+}
