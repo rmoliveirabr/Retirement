@@ -152,8 +152,11 @@ export class RetirementCalculatorService {
                 break;
             }
 
-            // Salary applies only if end_of_salary_date not reached
-            const salaryActive = yearStart < endOfSalaryDate;
+            // Check if funds are depleted at the START of the year
+            // If currentValue <= 0, we've run out of money
+            if (currentValue <= 0 && y > 0) {
+                break;
+            }
 
             // Yearly accumulators
             let totalExpensesYear = 0.0;
@@ -184,7 +187,7 @@ export class RetirementCalculatorService {
 
                 // monthly income: salary if active
                 let monthlySalary = 0.0;
-                if (salaryActive) {
+                if (monthDate < endOfSalaryDate) {
                     monthlySalary =
                         profile.monthlySalaryNet * Math.pow(1 + profile.annualInflation, inflationYears);
                 }
@@ -237,16 +240,13 @@ export class RetirementCalculatorService {
             // Append to timeline only from retirement_start_date onward
             if (isInRetirement) {
                 const yearsSinceRetirement = currentYear - startYear;
-                const displayStart = new Date(
-                    startYear + yearsSinceRetirement,
-                    anchorMonth,
-                    1,
-                );
-                const displayEnd = new Date(
-                    startYear + yearsSinceRetirement + 1,
-                    anchorMonth,
-                    1,
-                );
+
+                // Use the actual retirement start date for calculating display periods
+                const displayStart = new Date(retirementStartDate);
+                displayStart.setFullYear(startYear + yearsSinceRetirement);
+
+                const displayEnd = new Date(retirementStartDate);
+                displayEnd.setFullYear(startYear + yearsSinceRetirement + 1);
 
                 timeline.push({
                     year: yearsSinceRetirement + 1,
@@ -277,11 +277,6 @@ export class RetirementCalculatorService {
 
             // set pending tax to be paid next year
             pendingTax = taxThisYear;
-
-            // detect depletion
-            if (finalValue < 0) {
-                break;
-            }
 
             y++;
         }

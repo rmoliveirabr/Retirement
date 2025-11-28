@@ -1,5 +1,7 @@
 ## To Fix
-- When making simulations, it's not stopping the calculation when the money finishes
+- See how to deploy to Vercel
+- In my test, the "Data de Início da Aposentadoria" is 01/01/2026, but the "Período" starts with 12-2025, and it should be from 01-2026 to 01-2027 for year 1 
+- Test solutions (negative numbers, timeline stop in simulation)
 
 ## Pending
 - **Authentication**: User login and session management
@@ -13,5 +15,12 @@
 - **Deployment**: Cloud hosting
 
 ## Done
+- **Calculation Fixes** (Nov 24, 2025):
+  - Fixed year numbering to start from 1 instead of 2
+  - Fixed age display in timeline
+  - Fixed period dates to use retirement start month/year
+  - Allow negative final values to show funding gaps (displayed in red)
+  - Stop timeline when funds are depleted (currentValue <= 0)
+- **Fund Depletion Calculation Fix**: Fixed bug where Year #21 showed R$ 0,00 incorrectly. Now properly clamps final value to 0 when funds are depleted and stops timeline at the depletion year (Nov 24, 2025)
 - **Prepare for Hosting**: Dockerize all three components (Frontend, Backend, and json-server) into separate containers, then use Docker Compose to manage them.
 - **Backend Refactoring**: Migrated backend from FastAPI (Python) to NestJS (TypeScript) for standardized stack with improved type safety and maintainability (Nov 23, 2025)
