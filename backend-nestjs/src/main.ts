@@ -13,9 +13,9 @@ async function bootstrap() {
       origin: frontendOrigin,
       credentials: true,
       methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-      preflightContinue: false,
-      optionsSuccessStatus: 204,
+      //allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+      //preflightContinue: false,
+      //optionsSuccessStatus: 204,
     });
 
     // Enable validation
