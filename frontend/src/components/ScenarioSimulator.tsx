@@ -28,7 +28,7 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   onSaveProfileAndRecalculate,
 }) => {
   const [activeTab, setActiveTab] = useState('simulator');
-  const [simulationParams, setSimulationParams] = useState({
+  const [simulationParams, setSimulationParams] = useState<Record<string, number | string>>({
     totalAssets: profile.totalAssets || 0,
     fixedAssets: profile.fixedAssets || 0,
     fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
@@ -44,11 +44,13 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     annualInflation: profile.annualInflation || 0,
   });
 
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
 
-  // Currency and percentage input formatting state
+  // ... (rest of the component)
+
+
   const [currencyInput, setCurrencyInput] = useState<Record<string, string>>({});
   const [percentInput, setPercentInput] = useState<Record<string, string>>({});
 
@@ -71,7 +73,7 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const handleInputChange = (field: string, value: string | number) => {
     setSimulationParams(prev => ({
       ...prev,
-      [field]: typeof value === 'string' ? parseFloat(value) || 0 : value
+      [field]: value
     }));
   };
 
@@ -94,50 +96,56 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     setSimulationParams(prev => ({ ...prev, [name]: numericValue }));
   };
 
-  const formatNumberForInput = (amount: number): string => {
-    if (amount === null || amount === undefined || isNaN(amount)) return '';
-    const hasDecimals = Math.abs(amount % 1) > 0;
+  const formatNumberForInput = (amount: number | string): string => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (num === null || num === undefined || isNaN(num)) return '';
+    const hasDecimals = Math.abs(num % 1) > 0;
     return new Intl.NumberFormat('pt-BR', {
       minimumFractionDigits: hasDecimals ? 2 : 0,
       maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(num);
   };
 
-  const getCurrencyDisplay = (name: string, numericValue: number) => {
+  const getCurrencyDisplay = (name: string, numericValue: number | string) => {
     return currencyInput[name] ?? formatNumberForInput(numericValue ?? 0);
   };
 
-  const getPercentDisplay = (name: string, numericValue: number) => {
-    return percentInput[name] ?? (isNaN(numericValue) ? '' : ((numericValue * 100).toFixed(2)).replace('.', ','));
+  const getPercentDisplay = (name: string, numericValue: number | string) => {
+    const num = typeof numericValue === 'string' ? parseFloat(numericValue) : numericValue;
+    return percentInput[name] ?? (isNaN(num) ? '' : ((num * 100).toFixed(2)).replace('.', ','));
   };
 
   const handleCurrencyFocus = (e: React.FocusEvent<HTMLInputElement>, name: string) => {
-    const current = currencyInput[name] ?? formatNumberForInput(simulationParams[name as keyof typeof simulationParams] as number);
+    const current = currencyInput[name] ?? formatNumberForInput(simulationParams[name as keyof typeof simulationParams]);
     if (current === '0' || current === '0,00' || current === '') {
       e.target.select();
     }
     const toSet = (current === '0' || current === '0,00') ? '' : current;
-    setCurrencyInput(prev => ({ ...prev, [name]: prev[name] ?? toSet }));
+    setCurrencyInput(prev => ({ ...prev, [name]: toSet }));
   };
 
   const handleCurrencyBlur = (name: string) => {
-    const numericValue = simulationParams[name as keyof typeof simulationParams] as number ?? 0;
+    const rawValue = simulationParams[name as keyof typeof simulationParams] ?? 0;
+    const numericValue = typeof rawValue === 'string' ? parseFloat(rawValue) : rawValue;
     setCurrencyInput(prev => ({ ...prev, [name]: formatNumberForInput(numericValue) }));
   };
 
   const handlePercentFocus = (e: React.FocusEvent<HTMLInputElement>, name: string) => {
-    const defaultVal = ('' + ((simulationParams[name as keyof typeof simulationParams] as number ?? 0) * 100));
+    const rawValue = simulationParams[name as keyof typeof simulationParams] ?? 0;
+    const num = typeof rawValue === 'string' ? parseFloat(rawValue) : rawValue;
+    const defaultVal = ('' + (num * 100));
     const formattedDefault = isNaN(parseFloat(defaultVal)) ? '' : (parseFloat(defaultVal).toFixed(2).replace('.', ','));
     if (formattedDefault === '0,00' || formattedDefault === '0' || formattedDefault === '') {
       e.target.select();
     }
     const toSet = (formattedDefault === '0,00' || formattedDefault === '0') ? '' : formattedDefault;
-    setPercentInput(prev => ({ ...prev, [name]: prev[name] ?? toSet }));
+    setPercentInput(prev => ({ ...prev, [name]: toSet }));
   };
 
   const handlePercentBlur = (name: string) => {
-    const numericValue = simulationParams[name as keyof typeof simulationParams] as number ?? 0;
-    const display = isNaN(numericValue) ? '' : ((numericValue * 100).toFixed(2)).replace('.', ',');
+    const rawValue = simulationParams[name as keyof typeof simulationParams] ?? 0;
+    const num = typeof rawValue === 'string' ? parseFloat(rawValue) : rawValue;
+    const display = isNaN(num) ? '' : ((num * 100).toFixed(2)).replace('.', ',');
     setPercentInput(prev => ({ ...prev, [name]: display }));
   };
 
@@ -145,37 +153,63 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     setSimulationParams({ ...initialParams });
   };
 
+  const getSanitizedParams = () => {
+    const sanitized: any = {};
+    Object.keys(simulationParams).forEach(key => {
+      const val = simulationParams[key];
+      sanitized[key] = (val === '' || val === null || val === undefined) ? 0 : Number(val);
+    });
+    return sanitized;
+  };
+
+  const showToastNotification = (message: string) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const scrollToResults = () => {
+    // Find the calculation section in the parent component
+    const resultsSection = document.querySelector('.calculation-section');
+    if (resultsSection) {
+      setTimeout(() => {
+        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100); // Small delay to allow React to render updates
+    }
+  };
+
   const handleRecalculate = () => {
     // Only trigger calculation without saving to profile
     if (onCalculateScenario) {
-      onCalculateScenario(profile, simulationParams);
+      onCalculateScenario(profile, getSanitizedParams());
     }
-    setSuccessMessage('Cálculo atualizado com sucesso.');
-    setShowSuccessModal(true);
+    showToastNotification('Cálculo atualizado com sucesso!');
+    scrollToResults();
   };
 
   const handleSaveToProfile = async () => {
+    const params = getSanitizedParams();
     const updatedProfile = {
       ...profile,
-      totalAssets: simulationParams.totalAssets,
-      fixedAssets: simulationParams.fixedAssets,
-      fixedAssetsGrowthRate: simulationParams.fixedAssetsGrowthRate,
-      monthlySalaryNet: simulationParams.monthlyNetSalary,
-      governmentRetirementIncome: simulationParams.govPension,
-      endOfSalaryYears: simulationParams.yearsUntilSalaryEnds,
-      governmentRetirementStartYears: simulationParams.yearsUntilGovRetirement,
-      monthlyExpenseRecurring: simulationParams.monthlyExpenses,
-      rent: simulationParams.monthlyRent,
-      oneTimeAnnualExpense: simulationParams.oneTimeExpenses,
-      monthlyReturnRate: simulationParams.monthlyReturnRate,
-      investmentTaxRate: simulationParams.investmentTaxRate,
-      annualInflation: simulationParams.annualInflation,
+      totalAssets: params.totalAssets,
+      fixedAssets: params.fixedAssets,
+      fixedAssetsGrowthRate: params.fixedAssetsGrowthRate,
+      monthlySalaryNet: params.monthlyNetSalary,
+      governmentRetirementIncome: params.govPension,
+      endOfSalaryYears: params.yearsUntilSalaryEnds,
+      governmentRetirementStartYears: params.yearsUntilGovRetirement,
+      monthlyExpenseRecurring: params.monthlyExpenses,
+      rent: params.monthlyRent,
+      oneTimeAnnualExpense: params.oneTimeExpenses,
+      monthlyReturnRate: params.monthlyReturnRate,
+      investmentTaxRate: params.investmentTaxRate,
+      annualInflation: params.annualInflation,
     };
 
     if (onSaveProfileAndRecalculate) {
       await onSaveProfileAndRecalculate(updatedProfile);
-      setSuccessMessage('Perfil atualizado com sucesso.');
-      setShowSuccessModal(true);
+      showToastNotification('Perfil salvo e recalculado com sucesso!');
+      scrollToResults();
     }
   };
 
@@ -199,6 +233,24 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
   return (
     <div className="simulator-container">
+      {/* Toast Notification */}
+      {showToast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          backgroundColor: '#4caf50',
+          color: 'white',
+          padding: '12px 24px',
+          borderRadius: '4px',
+          boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+          zIndex: 2000,
+          animation: 'fadeIn 0.3s ease-in-out'
+        }}>
+          {toastMessage}
+        </div>
+      )}
+
       <div className="simulator-header">
         <h2>Simulador de Cenários</h2>
         <button className="close-btn" onClick={onClose}>×</button>
@@ -461,25 +513,6 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
           </div>
           <div className="projection-content">
             <p>Gráfico de projeção será exibido aqui.</p>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="modal-overlay" onClick={() => setShowSuccessModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-icon success">✓</div>
-            <h3>Sucesso!</h3>
-            <p>{successMessage}</p>
-            <div className="modal-actions">
-              <button
-                className="btn btn-primary"
-                onClick={() => setShowSuccessModal(false)}
-              >
-                OK
-              </button>
-            </div>
           </div>
         </div>
       )}

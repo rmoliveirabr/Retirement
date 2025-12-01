@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { ProfilesModule } from './profiles/profiles.module';
 import { RetirementModule } from './retirement/retirement.module';
 import { AiModule } from './ai/ai.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AiModule } from './ai/ai.module';
     ProfilesModule,
     RetirementModule,
     AiModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

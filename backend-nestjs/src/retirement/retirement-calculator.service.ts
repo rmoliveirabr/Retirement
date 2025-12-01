@@ -64,7 +64,9 @@ export class RetirementCalculatorService {
         let timelineStartDate: Date;
         if (profile.startDate) {
             try {
-                timelineStartDate = new Date(profile.startDate);
+                timelineStartDate = new Date(parseInt(profile.startDate.substring(0, 4)),
+                    parseInt(profile.startDate.substring(5, 7)) - 1,
+                    parseInt(profile.startDate.substring(8, 10)));
             } catch (e) {
                 timelineStartDate = new Date(today.getFullYear(), 0, 1);
             }
@@ -152,11 +154,8 @@ export class RetirementCalculatorService {
                 break;
             }
 
-            // Check if funds are depleted at the START of the year
-            // If currentValue <= 0, we've run out of money
-            if (currentValue <= 0 && y > 0) {
-                break;
-            }
+            // Continue calculation even if funds are depleted to show negative balances
+            // This allows the simulation to show when and how much money runs out
 
             // Yearly accumulators
             let totalExpensesYear = 0.0;
@@ -187,7 +186,7 @@ export class RetirementCalculatorService {
 
                 // monthly income: salary if active
                 let monthlySalary = 0.0;
-                if (monthDate < endOfSalaryDate) {
+                if (monthDate <= endOfSalaryDate) {
                     monthlySalary =
                         profile.monthlySalaryNet * Math.pow(1 + profile.annualInflation, inflationYears);
                 }
@@ -241,12 +240,19 @@ export class RetirementCalculatorService {
             if (isInRetirement) {
                 const yearsSinceRetirement = currentYear - startYear;
 
-                // Use the actual retirement start date for calculating display periods
-                const displayStart = new Date(retirementStartDate);
-                displayStart.setFullYear(startYear + yearsSinceRetirement);
+                // Calculate display periods based on the actual year being simulated
+                // For year 1 (yearsSinceRetirement = 0), show the period from retirement start to one year later
+                const displayStart = new Date(
+                    startYear + yearsSinceRetirement,
+                    retirementStartDate.getMonth(),
+                    retirementStartDate.getDate()
+                );
 
-                const displayEnd = new Date(retirementStartDate);
-                displayEnd.setFullYear(startYear + yearsSinceRetirement + 1);
+                const displayEnd = new Date(
+                    startYear + yearsSinceRetirement + 1,
+                    retirementStartDate.getMonth(),
+                    retirementStartDate.getDate()
+                );
 
                 timeline.push({
                     year: yearsSinceRetirement + 1,

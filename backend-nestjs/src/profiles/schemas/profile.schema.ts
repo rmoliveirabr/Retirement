@@ -1,11 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Schema as MongooseSchema } from 'mongoose';
 
 export type ProfileDocument = HydratedDocument<Profile>;
 
 @Schema({ timestamps: true })
 export class Profile {
-    @Prop({ required: true, unique: true })
+    @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
+    userId: string;
+
+    @Prop({ required: true })
+    profileName: string;
+
+    @Prop({ required: true })
     email: string;
 
     @Prop({ required: true })

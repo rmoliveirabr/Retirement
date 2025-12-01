@@ -13,6 +13,7 @@ interface ProfileFormProps {
 
 const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit, onCancel, isLoading = false }) => {
   const [formData, setFormData] = useState<ProfileCreate>({
+    profileName: '',
     email: '',
     baseAge: 30,
     startDate: '',
@@ -42,6 +43,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
   useEffect(() => {
     if (profile) {
       setFormData({
+        profileName: profile.profileName,
         email: profile.email,
         startDate: getDateDisplay(profile.startDate ?? ''),
         baseAge: profile.baseAge,
@@ -63,6 +65,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
       });
     } else if (cloneData) {
       setFormData({
+        profileName: cloneData.profileName + ' (Copy)',
         email: '',
         baseAge: cloneData.baseAge,
         startDate: getDateDisplay(cloneData.startDate ?? ''),
@@ -409,7 +412,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
       e.target.select();
     }
     const toSet = (current === '0' || current === '0,00' || current === '0.00') ? '' : current;
-    setCurrencyInput(prev => ({ ...prev, [name]: prev[name] ?? toSet }));
+    setCurrencyInput(prev => ({ ...prev, [name]: toSet }));
   };
 
   const handlePercentageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -444,7 +447,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
       e.target.select();
     }
     const toSet = (formattedDefault === '0,00' || formattedDefault === '0') ? '' : formattedDefault;
-    setPercentInput(prev => ({ ...prev, [name]: prev[name] ?? toSet }));
+    setPercentInput(prev => ({ ...prev, [name]: toSet }));
   };
 
   const handlePercentageBlur = (name: string) => {
@@ -490,6 +493,21 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
             <h3>👤 Detalhes do Perfil</h3>
             <div className="form-grid">
               <div className="field-card">
+                <div className="form-group">
+                  <label htmlFor="profileName">Nome do Perfil *</label>
+                  <input
+                    type="text"
+                    id="profileName"
+                    name="profileName"
+                    value={formData.profileName}
+                    onChange={handleChange}
+                    className={errors.profileName ? 'error' : ''}
+                    required
+                    placeholder="Ex: Meu Plano Principal"
+                  />
+                  {errors.profileName && <span className="error-message">{errors.profileName}</span>}
+                </div>
+
                 <div className="form-group">
                   <label htmlFor="email">Email *</label>
                   <input
@@ -760,9 +778,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                     type="number"
                     id="governmentRetirementStartYears"
                     name="governmentRetirementStartYears"
-                    value={formData.governmentRetirementStartYears ?? 0}
+                    value={isNaN(formData.governmentRetirementStartYears ?? NaN) ? '' : formData.governmentRetirementStartYears}
                     onChange={(e) => {
-                      const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                      const v = e.target.value === '' ? NaN : parseInt(e.target.value, 10);
                       setFormData(prev => ({ ...prev, governmentRetirementStartYears: v }));
                       setHasUnsavedChanges(true);
                       if (errors.governmentRetirementStartYears) setErrors(prev => ({ ...prev, governmentRetirementStartYears: '' }));
@@ -781,9 +799,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                     type="number"
                     id="endOfSalaryYears"
                     name="endOfSalaryYears"
-                    value={formData.endOfSalaryYears ?? 0}
+                    value={isNaN(formData.endOfSalaryYears) ? '' : formData.endOfSalaryYears}
                     onChange={(e) => {
-                      const v = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                      const v = e.target.value === '' ? NaN : parseInt(e.target.value, 10);
                       setFormData(prev => ({ ...prev, endOfSalaryYears: v }));
                       setHasUnsavedChanges(true);
                       if (errors.endOfSalaryYears) setErrors(prev => ({ ...prev, endOfSalaryYears: '' }));

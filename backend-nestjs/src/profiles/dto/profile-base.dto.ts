@@ -11,6 +11,9 @@ import {
 import { Type } from 'class-transformer';
 
 export class ProfileBaseDto {
+    @IsString()
+    profileName: string;
+
     @IsEmail()
     email: string;
 

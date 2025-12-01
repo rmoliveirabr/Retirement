@@ -5,6 +5,8 @@ import { profileApi, retirementApi, healthApi } from './services/api';
 import ProfileForm from './components/ProfileForm';
 import ProfileList from './components/ProfileList';
 import RetirementResults from './components/RetirementResults';
+import { AuthWrapper } from './components/AuthWrapper';
+import { useAuth } from './contexts/AuthContext';
 
 interface ApiResponse {
   message: string;
@@ -19,7 +21,10 @@ interface HealthResponse {
 
 type ViewMode = 'list' | 'create-profile' | 'edit-profile' | 'clone-profile' | 'results';
 
+
+
 function App() {
+  const { user } = useAuth();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
@@ -27,6 +32,7 @@ function App() {
   const [calculation, setCalculation] = useState<RetirementCalculation | null>(null);
   const [readiness, setReadiness] = useState<RetirementReadiness | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState("Carregando perfis...");
   const [error, setError] = useState<string | null>(null);
   // const [apiData, setApiData] = useState<ApiResponse | null>(null);
   // const [healthData, setHealthData] = useState<HealthResponse | null>(null);
@@ -34,8 +40,16 @@ function App() {
 
   useEffect(() => {
     const fetchData = async () => {
+      // If no user is logged in, clear profiles and return
+      if (!user) {
+        setProfiles([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
+        setLoadingMessage("Carregando perfis...");
         const [healthResponse1, healthResponse2, profilesResponse] = await Promise.all([
           healthApi.check().catch(err => {
             console.error('Health check 1 failed:', err);
@@ -51,11 +65,6 @@ function App() {
           })
         ]);
 
-        console.log('Health check 1:', healthResponse1);
-        console.log('Health check 2:', healthResponse2);
-        console.log('Profiles response:', profilesResponse);
-        console.log('Is profiles an array?', Array.isArray(profilesResponse));
-
         // Defensive: ensure profiles is always an array
         const validProfiles = Array.isArray(profilesResponse) ? profilesResponse : [];
         setProfiles(validProfiles);
@@ -70,7 +79,7 @@ function App() {
     };
 
     fetchData();
-  }, []);
+  }, [user]); // Re-run when user changes
 
   const handleCreateProfile = async (profileData: ProfileCreate | ProfileUpdate) => {
     // Type guard to ensure we have required fields for creation
@@ -115,6 +124,7 @@ function App() {
   const handleCalculateRetirement = async (profile: Profile) => {
     try {
       setLoading(true);
+      setLoadingMessage("Calculando...");
       const [calculationResult, readinessResult] = await Promise.all([
         retirementApi.calculate({
           profileId: profile.id,
@@ -134,6 +144,7 @@ function App() {
       setError(err.response?.data?.detail || 'Failed to calculate retirement projections');
     } finally {
       setLoading(false);
+      setLoadingMessage("Carregando perfis...");
     }
   };
 
@@ -145,6 +156,7 @@ function App() {
   const handleCloneProfile = async (profile: Profile) => {
     try {
       setLoading(true);
+      setLoadingMessage("Clonando perfil...");
       const clonedData = await profileApi.clone(profile.id);
       setCloneData(clonedData);
       setViewMode('clone-profile');
@@ -153,6 +165,7 @@ function App() {
       setError(err.response?.data?.detail || 'Failed to clone profile');
     } finally {
       setLoading(false);
+      setLoadingMessage("Carregando perfis...");
     }
   };
 
@@ -205,6 +218,7 @@ function App() {
 
     try {
       setLoading(true);
+      setLoadingMessage("Salvando e recalculando...");
       // Save the profile to backend
       const savedProfile = await profileApi.update(selectedProfile.id, {
         email: updatedProfile.email,
@@ -248,6 +262,7 @@ function App() {
       setError(err.response?.data?.detail || 'Failed to save profile and recalculate');
     } finally {
       setLoading(false);
+      setLoadingMessage("Carregando perfis...");
     }
   };
 
@@ -259,97 +274,100 @@ function App() {
       onCalculate={handleCalculateRetirement}
       onClone={handleCloneProfile}
       isLoading={loading}
+      loadingMessage={loadingMessage}
     />
   );
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <div className="header-content-wrapper">
-          <div>
-            <h1>Planejamento de Aposentadoria</h1>
-            <p>Planeje seu futuro financeiro com confiança</p>
+    <AuthWrapper>
+      <div className="App">
+        <header className="App-header">
+          <div className="header-content-wrapper">
+            <div>
+              <h1>Planejamento de Aposentadoria</h1>
+              <p>Planeje seu futuro financeiro com confiança</p>
+            </div>
+            <div className="target-age-badge">
+              <label htmlFor="target-age-input" className="badge-label">Idade Alvo:</label>
+              <input
+                id="target-age-input"
+                type="number"
+                className="badge-input"
+                value={targetAge}
+                onChange={(e) => setTargetAge(Number(e.target.value))}
+                min="50"
+                max="120"
+              />
+            </div>
           </div>
-          <div className="target-age-badge">
-            <label htmlFor="target-age-input" className="badge-label">Idade Alvo:</label>
-            <input
-              id="target-age-input"
-              type="number"
-              className="badge-input"
-              value={targetAge}
-              onChange={(e) => setTargetAge(Number(e.target.value))}
-              min="50"
-              max="120"
+        </header>
+
+        <main className="App-main">
+          {error && (
+            <div className="error-banner">
+              <p>⚠️ {error}</p>
+              <button onClick={() => setError(null)}>×</button>
+            </div>
+          )}
+
+          <div className="profiles-header">
+            <div>
+              <h2>Seus Perfis</h2>
+              <p>Gerencie e calcule cenários de aposentadoria</p>
+            </div>
+            <button className="btn-create" onClick={() => setViewMode('create-profile')}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Criar Perfil
+            </button>
+          </div>
+
+          {renderProfiles()}
+          {viewMode === 'create-profile' && (
+            <ProfileForm
+              onSubmit={handleCreateProfile}
+              onCancel={handleCloseForm}
+              isLoading={loading}
             />
-          </div>
-        </div>
-      </header>
+          )}
+          {viewMode === 'edit-profile' && selectedProfile && (
+            <ProfileForm
+              profile={selectedProfile}
+              onSubmit={handleUpdateProfile}
+              onCancel={handleCloseForm}
+              isLoading={loading}
+            />
+          )}
+          {viewMode === 'clone-profile' && cloneData && (
+            <ProfileForm
+              cloneData={cloneData}
+              onSubmit={handleCreateProfile}
+              onCancel={handleCloseForm}
+              isLoading={loading}
+            />
+          )}
+          {viewMode === 'results' && (calculation || readiness) && (
+            <RetirementResults
+              calculation={calculation || undefined}
+              readiness={readiness || undefined}
+              onClose={handleCloseResults}
+              profile={selectedProfile || undefined}
+              onProfileUpdate={handleProfileUpdateFromScenario}
+              onCalculateScenario={handleCalculateScenario}
+              onSaveProfileAndRecalculate={handleSaveProfileAndRecalculate}
+            />
+          )}
+        </main>
 
-      <main className="App-main">
-        {error && (
-          <div className="error-banner">
-            <p>⚠️ {error}</p>
-            <button onClick={() => setError(null)}>×</button>
-          </div>
-        )}
-
-        <div className="profiles-header">
-          <div>
-            <h2>Seus Perfis</h2>
-            <p>Gerencie e calcule cenários de aposentadoria</p>
-          </div>
-          <button className="btn-create" onClick={() => setViewMode('create-profile')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Criar Perfil
-          </button>
-        </div>
-
-        {renderProfiles()}
-        {viewMode === 'create-profile' && (
-          <ProfileForm
-            onSubmit={handleCreateProfile}
-            onCancel={handleCloseForm}
-            isLoading={loading}
-          />
-        )}
-        {viewMode === 'edit-profile' && selectedProfile && (
-          <ProfileForm
-            profile={selectedProfile}
-            onSubmit={handleUpdateProfile}
-            onCancel={handleCloseForm}
-            isLoading={loading}
-          />
-        )}
-        {viewMode === 'clone-profile' && cloneData && (
-          <ProfileForm
-            cloneData={cloneData}
-            onSubmit={handleCreateProfile}
-            onCancel={handleCloseForm}
-            isLoading={loading}
-          />
-        )}
-        {viewMode === 'results' && (calculation || readiness) && (
-          <RetirementResults
-            calculation={calculation || undefined}
-            readiness={readiness || undefined}
-            onClose={handleCloseResults}
-            profile={selectedProfile || undefined}
-            onProfileUpdate={handleProfileUpdateFromScenario}
-            onCalculateScenario={handleCalculateScenario}
-            onSaveProfileAndRecalculate={handleSaveProfileAndRecalculate}
-          />
-        )}
-      </main>
-
-      <footer className="App-footer">
-        <p>© 2025 Planejamento de Aposentadoria.</p>
-        <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '10px' }}>
-          API: {process.env.REACT_APP_API_URL || 'Localhost'}
-        </p>
-      </footer>
-    </div>
+        <footer className="App-footer">
+          <p>© 2025 Planejamento de Aposentadoria.</p>
+          <p style={{ fontSize: '0.8rem', color: '#666', marginTop: '10px' }}>
+            API: {process.env.REACT_APP_API_URL || 'Localhost'}
+          </p>
+        </footer>
+      </div>
+    </AuthWrapper>
   );
 }
 

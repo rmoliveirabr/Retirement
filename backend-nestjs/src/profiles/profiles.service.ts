@@ -15,6 +15,10 @@ export class ProfilesService {
         return this.profileModel.find().exec();
     }
 
+    async findByUserId(userId: string): Promise<Profile[]> {
+        return this.profileModel.find({ userId }).exec();
+    }
+
     async findOne(id: string): Promise<Profile> {
         // Validate if id is valid ObjectId? Mongoose throws CastError if not.
         // We can let it throw or catch it.
@@ -32,27 +36,19 @@ export class ProfilesService {
         }
     }
 
-    async findByEmail(email: string): Promise<Profile | null> {
-        return this.profileModel.findOne({ email }).exec();
+    async findByEmail(email: string): Promise<Profile[]> {
+        return this.profileModel.find({ email }).exec();
     }
 
-    async create(createProfileDto: CreateProfileDto): Promise<Profile> {
-        const existing = await this.findByEmail(createProfileDto.email);
-        if (existing) {
-            throw new Error(`Profile with email ${createProfileDto.email} already exists`);
-        }
-        const createdProfile = new this.profileModel(createProfileDto);
+    async create(createProfileDto: CreateProfileDto, userId: string): Promise<Profile> {
+        const createdProfile = new this.profileModel({
+            ...createProfileDto,
+            userId,
+        });
         return createdProfile.save();
     }
 
     async update(id: string, updateProfileDto: UpdateProfileDto): Promise<Profile> {
-        if (updateProfileDto.email) {
-            const existing = await this.findByEmail(updateProfileDto.email);
-            if (existing && (existing as any)._id.toString() !== id) {
-                throw new Error(`Email ${updateProfileDto.email} is already in use`);
-            }
-        }
-
         try {
             const updatedProfile = await this.profileModel
                 .findByIdAndUpdate(id, updateProfileDto, { new: true })

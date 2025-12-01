@@ -1,10 +1,12 @@
-import { Controller, Post, Get, Body, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Post, Get, Body, Param, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { RetirementCalculatorService } from './retirement-calculator.service';
 import { ProfilesService } from '../profiles/profiles.service';
 import { CalculationRequestDto } from './dto/calculation-request.dto';
 import { ScenarioRequestDto } from './dto/scenario-request.dto';
 
 @Controller('api/retirement')
+@UseGuards(AuthGuard('jwt'))
 export class RetirementController {
     constructor(
         private readonly calculatorService: RetirementCalculatorService,
@@ -43,7 +45,9 @@ export class RetirementController {
         const profile = await this.profilesService.findOne(request.profileId);
 
         // Apply scenario overrides to profile
-        const scenarioProfile = { ...profile };
+        const profileObj = (profile as any).toObject ? (profile as any).toObject() : profile;
+        const scenarioProfile = { ...profileObj };
+        if (request.startDate !== undefined) scenarioProfile.startDate = request.startDate;
         if (request.totalAssets !== undefined) scenarioProfile.totalAssets = request.totalAssets;
         if (request.fixedAssets !== undefined) scenarioProfile.fixedAssets = request.fixedAssets;
         if (request.monthlySalaryNet !== undefined)

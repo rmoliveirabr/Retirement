@@ -26,6 +26,10 @@ export class ScenarioRequestDto {
 
     // Optional profile overrides for scenario testing
     @IsOptional()
+    @IsString()
+    startDate?: string;
+
+    @IsOptional()
     @IsNumber()
     @Min(0)
     @Type(() => Number)

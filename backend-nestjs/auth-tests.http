@@ -1,0 +1,97 @@
+### Authentication API Tests
+
+@baseUrl = http://localhost:8000
+@token = your-jwt-token-here
+
+### Register a new user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+### Register an admin user
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "password": "admin123",
+  "role": "admin"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+
+### Get current user (requires authentication)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### Request password reset
+POST {{baseUrl}}/api/auth/request-password-reset
+Content-Type: application/json
+
+{
+  "email": "user@example.com"
+}
+
+### Reset password with token
+POST {{baseUrl}}/api/auth/reset-password/user@example.com
+Content-Type: application/json
+
+{
+  "token": "reset-token-from-email",
+  "newPassword": "newpassword123"
+}
+
+### Admin: Reset user password (requires admin role)
+POST {{baseUrl}}/api/auth/admin/reset-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "email": "user@example.com"
+}
+
+### Get all users (admin only)
+GET {{baseUrl}}/api/auth/users
+Authorization: Bearer {{token}}
+
+### Create a profile (requires authentication)
+POST {{baseUrl}}/api/profiles
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "profileName": "My Retirement Plan",
+  "email": "user@example.com",
+  "baseAge": 35,
+  "startDate": "2026-01-01",
+  "totalAssets": 100000,
+  "fixedAssets": 50000,
+  "monthlySalaryNet": 5000,
+  "governmentRetirementIncome": 2000,
+  "monthlyReturnRate": 0.007,
+  "fixedAssetsGrowthRate": 0.04,
+  "investmentTaxRate": 0.15,
+  "investmentTaxablePercentage": 1.0,
+  "endOfSalaryYears": 30,
+  "governmentRetirementStartYears": 35,
+  "governmentRetirementAdjustment": 0.03,
+  "monthlyExpenseRecurring": 3000,
+  "rent": 1500,
+  "oneTimeAnnualExpense": 5000,
+  "annualInflation": 0.04
+}
+
+### Get all profiles (user's own profiles only)
+GET {{baseUrl}}/api/profiles
+Authorization: Bearer {{token}}

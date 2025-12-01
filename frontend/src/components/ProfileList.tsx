@@ -10,6 +10,7 @@ interface ProfileListProps {
   onCalculate: (profile: Profile) => void;
   onClone: (profile: Profile) => void;
   isLoading?: boolean;
+  loadingMessage?: string;
 }
 
 const ProfileList: React.FC<ProfileListProps> = ({
@@ -18,7 +19,8 @@ const ProfileList: React.FC<ProfileListProps> = ({
   onDelete,
   onCalculate,
   onClone,
-  isLoading = false
+  isLoading = false,
+  loadingMessage = "Carregando perfis..."
 }) => {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -53,7 +55,7 @@ const ProfileList: React.FC<ProfileListProps> = ({
   if (isLoading) {
     return (
       <div className="profile-list">
-        <div className="loading">Carregando perfis...</div>
+        <div className="loading">{loadingMessage}</div>
       </div>
     );
   }

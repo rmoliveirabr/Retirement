@@ -1,5 +1,6 @@
 export interface Profile {
   id: number;
+  profileName: string;
   email: string;
   lastCalculation?: string;
   startDate?: string;
@@ -24,6 +25,7 @@ export interface Profile {
 }
 
 export interface ProfileCreate {
+  profileName: string;
   email: string;
   baseAge: number;
   startDate?: string;
