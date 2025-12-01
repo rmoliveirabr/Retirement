@@ -5,6 +5,10 @@
             "destination": "https://retirement-backend-rodrigo-machado-oliveiras-projects.vercel.app/api/:path*"
         },
         {
+            "source": "/auth/:path*",
+            "destination": "https://retirement-backend-rodrigo-machado-oliveiras-projects.vercel.app/api/auth/:path*"
+        },
+        {
             "source": "/health",
             "destination": "https://retirement-backend-rodrigo-machado-oliveiras-projects.vercel.app/health"
         }
