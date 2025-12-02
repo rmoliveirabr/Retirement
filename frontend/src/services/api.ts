@@ -101,6 +101,11 @@ export const askAI = async (question: string, profile: any, results: any[], hist
   return response.data; // { answer: "..." } 
 };
 
+export const getAiInfo = async (key: string, prompt: string, forceRefresh = false) => {
+  const response = await api.post('/api/ai/info', { key, prompt, forceRefresh });
+  return response.data; // { content: "...", cached: boolean }
+};
+
 // Health check API
 export const healthApi = {
   check: async () => {

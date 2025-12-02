@@ -1,7 +1,9 @@
 ## To Fix
+- fix alignment between field title and the 'i' for information
+- see how to show 'Ativos fixos', and allow it to be used as a backup for 'Ativos totais'
+- there is an conceptual issue - ativos is the money the user has now, but we use it 'as is' for the beginning of the retirement timeline. Review this concept urgently.
 
 ## Pending
-- **Improve UI**: Give tips for users when filling profile data
 - **Advanced Calculations**: Monte Carlo simulations, tax optimization
 - **Data Visualization**: Charts and graphs for projections
 - **Export Features**: PDF reports, Excel exports
@@ -29,3 +31,4 @@
 - **Real Database**: PostgreSQL or MongoDB integration
 - For a numeric field, when I clear the text field content, it replaces by zero... but when I start typing a number, it should remove the zero, but it keeps it (I can't delete the zero)
 - you can set a numeric field to zero when it loses focus and is empty
+- Show info about some key fields in the profile form (start with aposentadoria). Cache this data in the backend, to avoid several calls to AI, with a TTL of 2 months, and in the modal showing the information, have a little "reload" button to make the call again.

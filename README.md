@@ -135,10 +135,11 @@ The frontend will be available at `http://localhost:3000`
 - **Data Validation**: Comprehensive input validation with class-validator
 - **API Documentation**: Auto-generated Swagger/OpenAPI docs (coming soon)
 - **Error Handling**: Robust error handling and HTTP status codes
-- **AI Assistant**: Context-aware financial advice using OpenAI (GPT-4)
+- **AI Assistant**: Context-aware financial advice using OpenAI (GPT-4) with MongoDB caching
 - **CORS Configuration**: Cross-origin resource sharing setup
 - **Modular Architecture**: Clean separation of concerns with NestJS modules
 - **Type Safety**: Full TypeScript implementation for reliability
+- **AI Caching**: Intelligent caching system for AI responses (2-month TTL)
 
 ### Frontend (React + TypeScript)
 - **Profile Management**: Create, edit, delete, and view profiles
@@ -147,13 +148,15 @@ The frontend will be available at `http://localhost:3000`
 - **Responsive Design**: Mobile-friendly interface with CSS Grid/Flexbox
 - **Form Validation**: Client-side validation with error handling
 - **Modern UI**: Beautiful gradients, animations, and interactive components
+- **Modern UI**: Beautiful gradients, animations, and interactive components
 - **AI Chat Interface**: Interactive chat for personalized financial advice
+- **Smart Field Guidance**: AI-powered information buttons for complex fields with caching and static fallback
 
-### Database (JSON Server)
-- **RESTful API**: Full REST API for data operations
-- **Data Persistence**: JSON file-based storage
-- **Middleware Support**: Custom middleware for timestamps
-- **Development Ready**: Perfect for prototyping and development
+### Database (MongoDB)
+- **NoSQL Database**: Scalable document storage with MongoDB
+- **Mongoose ODM**: Elegant object modeling for Node.js
+- **Cloud Ready**: Configured for MongoDB Atlas
+- **Caching**: Dedicated collection for AI response caching
 
 ## API Endpoints
 
@@ -210,8 +213,9 @@ The application provides:
 - **CSS3**: Modern styling with Grid and Flexbox
 
 ### Database
-- **JSON Server**: REST API with JSON file storage
-- **Node.js**: Runtime for JSON Server
+- **MongoDB**: NoSQL database
+- **Mongoose**: ODM library
+- **MongoDB Atlas**: Cloud database service
 
 ## Development Workflow
 
@@ -327,7 +331,9 @@ This application provides a solid foundation for retirement planning. Potential 
 
 - ✅ **Docker Deployment**: Fully implemented with production and development modes
 - ✅ **Authentication**: User login and session management (implemented)
-- **Real Database**: PostgreSQL or MongoDB integration
+- ✅ **Authentication**: User login and session management (implemented)
+- ✅ **Real Database**: MongoDB integration complete
+- ✅ **AI Field Guidance**: Context-aware help with caching
 - **Advanced Calculations**: Monte Carlo simulations, tax optimization
 - **Data Visualization**: Charts and graphs for projections
 - **Export Features**: PDF reports, Excel exports

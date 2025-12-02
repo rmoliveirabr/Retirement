@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Profile, ProfileCreate, ProfileUpdate } from '../types';
 import { parseBrazilianCurrency, formatBrazilianCurrencyInput } from '../utils/currency';
+import AiInfoButton from './AiInfoButton';
 import './ProfileForm.css';
 
 interface ProfileFormProps {
@@ -21,7 +22,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     totalAssets: 0,
     fixedAssets: 0,
     monthlySalaryNet: 0,
-    governmentRetirementIncome: 0,
+    governmentRetirementIncome: 8157.41,
     monthlyReturnRate: 0.005,
     fixedAssetsGrowthRate: 0.04,
     investmentTaxRate: 0.15,
@@ -462,6 +463,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     }
   };
 
+
+
   return (
     <div className="profile-form-container" onClick={handleOverlayClick}>
       <div className="profile-form">
@@ -494,7 +497,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
             <div className="form-grid">
               <div className="field-card">
                 <div className="form-group">
-                  <label htmlFor="profileName">Nome do Perfil *</label>
+                  <label htmlFor="profileName">
+                    Nome do Perfil *
+                    <AiInfoButton
+                      fieldKey="profile_name"
+                      title="Nome do Perfil"
+                      staticText="Você poderá ter diversos perfis de aposentadoria, cada um com suas próprias configurações. Esses perfis podem refletir cenários otimistas / pessimistas da economia, ou momentos diferentes da sua vida em que a aposentadoria foi planejada."
+                    />
+                  </label>
                   <input
                     type="text"
                     id="profileName"
@@ -523,7 +533,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="startDate">Data de Início da Aposentadoria</label>
+                  <label htmlFor="startDate">
+                    Data de Início da Aposentadoria
+                    <AiInfoButton
+                      fieldKey="start_date"
+                      title="Data de Início da Aposentadoria"
+                      staticText="Em que data você pretende iniciar sua aposentadoria? Esta data será usada como base para diversos cálculos." />
+                  </label>
                   <input
                     type="text"
                     id="startDate"
@@ -562,7 +578,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
             <div className="form-grid">
               <div className="field-card">
                 <div className="form-group">
-                  <label htmlFor="totalAssets">Ativos Totais (R$)</label>
+                  <label htmlFor="totalAssets">
+                    Ativos Totais (R$)
+                    <AiInfoButton
+                      fieldKey="total_assets"
+                      title="Ativos Totais"
+                      staticText="Todo o dinheiro que você possui atualmente, seja em dinheiro, investimentos, imóveis, etc."
+                    />
+                  </label>
                   <input
                     type="text"
                     id="totalAssets"
@@ -592,7 +615,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="fixedAssetsGrowthRate">Taxa de Crescimento de Ativos Fixos (% anual)</label>
+                  <label htmlFor="fixedAssetsGrowthRate">
+                    Taxa de Crescimento de Ativos Fixos (% anual)
+                    <AiInfoButton
+                      fieldKey="fixed_assets_growth_rate"
+                      title="Taxa de Crescimento de Ativos Fixos"
+                      prompt={`Me dê, em uma lista muito resumida, a taxa de crescimento de ativos fixos em ${new Date().getFullYear()}. Precisamos de alguma estimativa de mercado (pode ser um intervalo) do quanto ativos fixos (principalmente imóveis) são esperados valorizar por ano. Pode deixar claro na resposta que é uma estimativa macro, e que pode haver, inclusive, desvalorização. Deixe claro também que os ativos fixos são considerados contingência, e não impactam neste cálculo de aposentadoria. Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
+                    />
+                  </label>
                   <input
                     type="text"
                     id="fixedAssetsGrowthRate"
@@ -636,7 +666,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="governmentRetirementIncome">Aposentadoria do Governo (Mensal R$)</label>
+                  <label htmlFor="governmentRetirementIncome" className="label-with-icon">
+                    Aposentadoria do Governo (R$)
+                    <AiInfoButton
+                      fieldKey="government_retirement_ceiling"
+                      title="Teto da Aposentadoria"
+                      prompt={`Me dê, em uma lista muito resumida, o teto para aposentadoria em ${new Date().getFullYear()}, com os principais outros valores. Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
+                    />
+                  </label>
                   <input
                     type="text"
                     id="governmentRetirementIncome"
@@ -687,7 +724,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="oneTimeAnnualExpense">Despesas Anuais Únicas (R$)</label>
+                  <label htmlFor="oneTimeAnnualExpense">
+                    Despesas Anuais Únicas (R$)
+                    <AiInfoButton
+                      fieldKey="one_time_annual_expense"
+                      title="Despesas Anuais Únicas"
+                      staticText="Despesas que você terá que pagar uma vez por ano, como por exemplo, viagens, compras esporádicas, etcs." />
+                  </label>
                   <input
                     type="text"
                     id="oneTimeAnnualExpense"
@@ -706,12 +749,19 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
           </div>
 
           <div className="form-section">
-            <h3>📊 Investimento e Estratégia Econômica</h3>
+            <h3>📊 Investimentos e Estratégia Econômica</h3>
             <div className="form-grid">
               <div className="field-card">
-                <h4>Investimento</h4>
+                <h4>Investimentos</h4>
                 <div className="form-group">
-                  <label htmlFor="monthlyReturnRate">Taxa de Retorno Mensal (%) - Máx 5%</label>
+                  <label htmlFor="monthlyReturnRate">
+                    Taxa de Retorno Mensal (%)
+                    <AiInfoButton
+                      fieldKey="monthly_return_rate"
+                      title="Taxa de Retorno Mensal"
+                      prompt={`Me dê, em uma lista muito resumida, a taxa de retorno mensal para investimentos em ${new Date().getFullYear()}, com os principais tipos de investimentos (CDI, poupança, CDB, etc.). A ideia é ter balizadores, não preciso de valores exatos. Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
+                    />
+                  </label>
                   <input
                     type="text"
                     id="monthlyReturnRate"
@@ -730,7 +780,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="investmentTaxRate">Imposto sobre Investimento (%)</label>
+                  <label htmlFor="investmentTaxRate">
+                    Imposto sobre Investimento (%)
+                    <AiInfoButton
+                      fieldKey="investment_tax_rate"
+                      title="Imposto sobre Investimentos"
+                      prompt={`Me dê, em uma lista muito resumida, a taxa de imposto sobre investimento considerando a lei vigente em ${new Date().getFullYear()} para ganhos de capital. Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
+                    />
+                  </label>
                   <input
                     type="text"
                     id="investmentTaxRate"
@@ -749,7 +806,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="investmentTaxablePercentage">Investimentos Tributáveis (%)</label>
+                  <label htmlFor="investmentTaxablePercentage">
+                    Investimentos Tributáveis (%)
+                    <AiInfoButton
+                      fieldKey="investment_taxable_percentage"
+                      title="Percentual de Investimentos Tributáveis"
+                      staticText="Nem todos os investimentos são tributáveis. Para um cálculo correto, informe aproximadamente qual o % dos seus investimentos são tributáveis."
+                    />
+                  </label>
                   <input
                     type="text"
                     id="investmentTaxablePercentage"
@@ -773,7 +837,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
               <div className="field-card">
                 <h4>Linha do Tempo</h4>
                 <div className="form-group">
-                  <label htmlFor="governmentRetirementStartYears">Início da Aposentadoria do Governo (anos)</label>
+                  <label htmlFor="governmentRetirementStartYears">
+                    Início da Aposentadoria do Governo (anos)
+                    <AiInfoButton
+                      fieldKey="government_retirement_start_years"
+                      title="Início da Aposentadoria do Governo"
+                      staticText="Em quantos anos a partir do início da data inicial do cálculo, a aposentadoria do governo será iniciada?"
+                    />
+                  </label>
                   <input
                     type="number"
                     id="governmentRetirementStartYears"
@@ -794,7 +865,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="endOfSalaryYears">Fim do Salário (anos)</label>
+                  <label htmlFor="endOfSalaryYears">
+                    Fim do Salário (anos)
+                    <AiInfoButton
+                      fieldKey="end_of_salary_years"
+                      title="Fim do Salário"
+                      staticText="Em quantos anos a partir do início da data inicial do cálculo, você deixará de ter salário?"
+                    />
+                  </label>
                   <input
                     type="number"
                     id="endOfSalaryYears"
@@ -818,7 +896,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
               <div className="field-card">
                 <h4>Premissas Econômicas</h4>
                 <div className="form-group">
-                  <label htmlFor="governmentRetirementAdjustment">Ajuste da Aposentadoria do Governo (% ao ano)</label>
+                  <label htmlFor="governmentRetirementAdjustment">
+                    Ajuste da Aposentadoria do Governo (% ao ano)
+                    <AiInfoButton
+                      fieldKey="government_retirement_adjustment"
+                      title="Ajuste da Aposentadoria do Governo"
+                      prompt={`Me dê, em uma lista muito resumida, a último informação que temos sobre o % de reajuste da aposentadoria do governo, considerando a lei vigente em ${new Date().getFullYear()}. Fale que "O último valor que temos sobre reajuste de aposentadoria...". Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
+                    />
+                  </label>
                   <input
                     type="text"
                     id="governmentRetirementAdjustment"
@@ -837,7 +922,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="annualInflation">Taxa de Inflação Anual (%)</label>
+                  <label htmlFor="annualInflation">
+                    Taxa de Inflação Anual (%)
+                    <AiInfoButton
+                      fieldKey="annual_inflation"
+                      title="Taxa de Inflação Anual"
+                      prompt={`Me dê, em uma lista muito resumida, a previsão de inflação para o ano ${new Date().getFullYear()}. Não precisamos de um número exato, mas de uma estimativa aproximada (pode ser um intervalo, com base em indicadores como IPCA e Selic. Dê a estimativa anual, e deixe claro que é "para o ano". Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
+                    />
+                  </label>
                   <input
                     type="text"
                     id="annualInflation"
