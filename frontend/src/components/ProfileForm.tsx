@@ -497,7 +497,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
             <div className="form-grid">
               <div className="field-card">
                 <div className="form-group">
-                  <label htmlFor="profileName">
+                  <label htmlFor="profileName" className="label-with-icon">
                     Nome do Perfil *
                     <AiInfoButton
                       fieldKey="profile_name"
@@ -533,7 +533,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="startDate">
+                  <label htmlFor="startDate" className="label-with-icon">
                     Data de Início da Aposentadoria
                     <AiInfoButton
                       fieldKey="start_date"
@@ -578,7 +578,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
             <div className="form-grid">
               <div className="field-card">
                 <div className="form-group">
-                  <label htmlFor="totalAssets">
+                  <label htmlFor="totalAssets" className="label-with-icon">
                     Ativos Totais (R$)
                     <AiInfoButton
                       fieldKey="total_assets"
@@ -615,7 +615,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="fixedAssetsGrowthRate">
+                  <label htmlFor="fixedAssetsGrowthRate" className="label-with-icon">
                     Taxa de Crescimento de Ativos Fixos (% anual)
                     <AiInfoButton
                       fieldKey="fixed_assets_growth_rate"
@@ -724,7 +724,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="oneTimeAnnualExpense">
+                  <label htmlFor="oneTimeAnnualExpense" className="label-with-icon">
                     Despesas Anuais Únicas (R$)
                     <AiInfoButton
                       fieldKey="one_time_annual_expense"
@@ -754,7 +754,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
               <div className="field-card">
                 <h4>Investimentos</h4>
                 <div className="form-group">
-                  <label htmlFor="monthlyReturnRate">
+                  <label htmlFor="monthlyReturnRate" className="label-with-icon">
                     Taxa de Retorno Mensal (%)
                     <AiInfoButton
                       fieldKey="monthly_return_rate"
@@ -780,7 +780,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="investmentTaxRate">
+                  <label htmlFor="investmentTaxRate" className="label-with-icon">
                     Imposto sobre Investimento (%)
                     <AiInfoButton
                       fieldKey="investment_tax_rate"
@@ -806,7 +806,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="investmentTaxablePercentage">
+                  <label htmlFor="investmentTaxablePercentage" className="label-with-icon">
                     Investimentos Tributáveis (%)
                     <AiInfoButton
                       fieldKey="investment_taxable_percentage"
@@ -837,7 +837,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
               <div className="field-card">
                 <h4>Linha do Tempo</h4>
                 <div className="form-group">
-                  <label htmlFor="governmentRetirementStartYears">
+                  <label htmlFor="governmentRetirementStartYears" className="label-with-icon">
                     Início da Aposentadoria do Governo (anos)
                     <AiInfoButton
                       fieldKey="government_retirement_start_years"
@@ -865,7 +865,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="endOfSalaryYears">
+                  <label htmlFor="endOfSalaryYears" className="label-with-icon">
                     Fim do Salário (anos)
                     <AiInfoButton
                       fieldKey="end_of_salary_years"
@@ -896,7 +896,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
               <div className="field-card">
                 <h4>Premissas Econômicas</h4>
                 <div className="form-group">
-                  <label htmlFor="governmentRetirementAdjustment">
+                  <label htmlFor="governmentRetirementAdjustment" className="label-with-icon">
                     Ajuste da Aposentadoria do Governo (% ao ano)
                     <AiInfoButton
                       fieldKey="government_retirement_adjustment"
@@ -922,7 +922,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="annualInflation">
+                  <label htmlFor="annualInflation" className="label-with-icon">
                     Taxa de Inflação Anual (%)
                     <AiInfoButton
                       fieldKey="annual_inflation"
