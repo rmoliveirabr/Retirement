@@ -44,11 +44,11 @@ export class Profile {
     @Prop({ required: true, default: 1.0 })
     investmentTaxablePercentage: number;
 
-    @Prop({ required: true, default: 0 })
-    endOfSalaryYears: number;
+    @Prop()
+    endOfSalaryYears?: string;
 
-    @Prop({ required: true, default: 0 })
-    governmentRetirementStartYears: number;
+    @Prop()
+    governmentRetirementStartYears?: string;
 
     @Prop({ required: true, default: 0 })
     governmentRetirementAdjustment: number;

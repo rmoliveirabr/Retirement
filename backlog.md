@@ -12,6 +12,7 @@
 - **Deployment**: Cloud hosting
 
 ## Done
+- **Salary Calculation Fix** (Dec 3, 2025): Fixed "Renda Total (Salário)" calculation that was including one extra month. Changed comparison from `<=` to `<` to exclude the end month.
 - **Scenario Simulation Fix** (Dec 2, 2025): Fixed issue where changing "Data de Início da Aposentadoria" in the simulator didn't update the calculation or row colors. Added `startDate` to the scenario request payload.
 - **Scenario Simulator Enhancement** (Dec 2, 2025): Added "Data de Início da Aposentadoria" field to scenario simulator with MM/YYYY format support.
 - **Government Retirement Calculation Fix** (Dec 2, 2025): "Anos para aposentadoria do governo" now counts from current year instead of retirement start date.
@@ -39,3 +40,4 @@
 - you can set a numeric field to zero when it loses focus and is empty
 - Show info about some key fields in the profile form (start with aposentadoria). Cache this data in the backend, to avoid several calls to AI, with a TTL of 2 months, and in the modal showing the information, have a little "reload" button to make the call again.
 - fix alignment between field title and the 'i' for information
+- Mudar número de anos para salário e aposentadoria para MM/YYYY

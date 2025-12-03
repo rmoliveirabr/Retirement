@@ -224,6 +224,7 @@ function App() {
       const savedProfile = await profileApi.update(selectedProfile.id, {
         email: updatedProfile.email,
         baseAge: updatedProfile.baseAge,
+        startDate: updatedProfile.startDate,
         totalAssets: updatedProfile.totalAssets,
         fixedAssets: updatedProfile.fixedAssets,
         monthlySalaryNet: updatedProfile.monthlySalaryNet,

@@ -74,17 +74,13 @@ export class ProfileBaseDto {
     @Type(() => Number)
     investmentTaxablePercentage: number = 1.0;
 
-    @IsInt()
-    @Min(0)
-    @Max(50)
-    @Type(() => Number)
-    endOfSalaryYears: number;
+    @IsOptional()
+    @IsString()
+    endOfSalaryYears?: string;
 
-    @IsInt()
-    @Min(0)
-    @Max(100)
-    @Type(() => Number)
-    governmentRetirementStartYears: number;
+    @IsOptional()
+    @IsString()
+    governmentRetirementStartYears?: string;
 
     @IsNumber()
     @Min(0)

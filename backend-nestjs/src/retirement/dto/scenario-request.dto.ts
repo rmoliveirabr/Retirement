@@ -82,18 +82,12 @@ export class ScenarioRequestDto {
     investmentTaxablePercentage?: number;
 
     @IsOptional()
-    @IsInt()
-    @Min(0)
-    @Max(50)
-    @Type(() => Number)
-    endOfSalaryYears?: number;
+    @IsString()
+    endOfSalaryYears?: string;
 
     @IsOptional()
-    @IsInt()
-    @Min(0)
-    @Max(100)
-    @Type(() => Number)
-    governmentRetirementStartYears?: number;
+    @IsString()
+    governmentRetirementStartYears?: string;
 
     @IsOptional()
     @IsNumber()

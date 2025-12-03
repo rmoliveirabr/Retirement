@@ -11,8 +11,8 @@ export interface Profile {
     fixedAssetsGrowthRate: number;
     investmentTaxRate: number;
     investmentTaxablePercentage: number;
-    endOfSalaryYears: number;
-    governmentRetirementStartYears: number;
+    endOfSalaryYears?: string;
+    governmentRetirementStartYears?: string;
     governmentRetirementAdjustment: number;
     monthlyExpenseRecurring: number;
     rent: number;
@@ -34,17 +34,16 @@ export function calculateYearsToRetirement(profile: Profile): number {
         }
     }
 
-    // 2) explicit years
-    if (
-        profile.governmentRetirementStartYears !== null &&
-        profile.governmentRetirementStartYears !== undefined
-    ) {
-        const years = parseInt(
-            profile.governmentRetirementStartYears.toString(),
-            10,
-        );
-        if (years > 0) {
-            return years;
+    // 2) parse governmentRetirementStartYears as MM/YYYY
+    if (profile.governmentRetirementStartYears) {
+        try {
+            const parts = profile.governmentRetirementStartYears.split('/');
+            if (parts.length === 2) {
+                const year = parseInt(parts[1], 10);
+                return Math.max(0, year - new Date().getFullYear());
+            }
+        } catch (e) {
+            // Invalid date format, continue to fallback
         }
     }
 

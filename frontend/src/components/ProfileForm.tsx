@@ -18,7 +18,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     email: '',
     baseAge: 30,
     startDate: '',
-    governmentRetirementStartYears: 0,
+    governmentRetirementStartYears: '',
     totalAssets: 0,
     fixedAssets: 0,
     monthlySalaryNet: 0,
@@ -27,7 +27,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     fixedAssetsGrowthRate: 0.04,
     investmentTaxRate: 0.15,
     investmentTaxablePercentage: 1.0,
-    endOfSalaryYears: 30,
+    endOfSalaryYears: '',
     governmentRetirementAdjustment: 0.03,
     monthlyExpenseRecurring: 0,
     rent: 0,
@@ -56,8 +56,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
         fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0.04,
         investmentTaxRate: profile.investmentTaxRate,
         investmentTaxablePercentage: profile.investmentTaxablePercentage ?? 1.0,
-        endOfSalaryYears: profile.endOfSalaryYears,
-        governmentRetirementStartYears: profile.governmentRetirementStartYears,
+        endOfSalaryYears: profile.endOfSalaryYears ?? '',
+        governmentRetirementStartYears: profile.governmentRetirementStartYears ?? '',
         governmentRetirementAdjustment: profile.governmentRetirementAdjustment,
         monthlyExpenseRecurring: profile.monthlyExpenseRecurring,
         rent: profile.rent,
@@ -78,8 +78,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
         fixedAssetsGrowthRate: cloneData.fixedAssetsGrowthRate || 0.04,
         investmentTaxRate: cloneData.investmentTaxRate,
         investmentTaxablePercentage: cloneData.investmentTaxablePercentage ?? 1.0,
-        endOfSalaryYears: cloneData.endOfSalaryYears,
-        governmentRetirementStartYears: cloneData.governmentRetirementStartYears ?? 0,
+        endOfSalaryYears: cloneData.endOfSalaryYears ?? '',
+        governmentRetirementStartYears: cloneData.governmentRetirementStartYears ?? '',
         governmentRetirementAdjustment: cloneData.governmentRetirementAdjustment,
         monthlyExpenseRecurring: cloneData.monthlyExpenseRecurring,
         rent: cloneData.rent,
@@ -155,13 +155,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
       newErrors.investmentTaxablePercentage = 'Taxable investments % must be between 0% and 100%';
     }
 
-    const eos = Number(formData.endOfSalaryYears || 0);
-    const sor = Number(formData.governmentRetirementStartYears || 0);
-    if (isNaN(eos) || eos < 0 || eos > 100) {
-      newErrors.endOfSalaryYears = 'End of salary (years) must be between 0 and 100';
+    // Validate date fields (MM/YYYY format)
+    if (formData.endOfSalaryYears && !/^\d{2}\/\d{4}$/.test(formData.endOfSalaryYears)) {
+      newErrors.endOfSalaryYears = 'Data deve estar no formato MM/AAAA';
     }
-    if (isNaN(sor) || sor < 0 || sor > 100) {
-      newErrors.governmentRetirementStartYears = 'Government retirement start (years) must be between 0 and 100';
+
+    if (formData.governmentRetirementStartYears && !/^\d{2}\/\d{4}$/.test(formData.governmentRetirementStartYears)) {
+      newErrors.governmentRetirementStartYears = 'Data deve estar no formato MM/AAAA';
     }
 
     if (formData.governmentRetirementAdjustment < 0 || formData.governmentRetirementAdjustment > 0.1) {
@@ -347,6 +347,77 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
 
     if (errors.startDate) {
       setErrors(prev => ({ ...prev, startDate: '' }));
+    }
+
+    // Restore cursor position after React updates
+    setTimeout(() => {
+      input.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
+  };
+
+  const handleMonthYearDateChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: string) => {
+    const input = e.target;
+    const value = input.value;
+    const oldValue = (formData as any)[fieldName] || '';
+
+    // Get only digits from both values
+    const oldDigits = oldValue.replace(/\D/g, '');
+    const newDigits = value.replace(/\D/g, '');
+
+    // If digits haven't changed, user just clicked or moved cursor - don't process
+    if (oldDigits === newDigits) {
+      return;
+    }
+
+    const cursorPosition = input.selectionStart || 0;
+
+    // Limit to 6 digits for MM/YYYY
+    const limitedDigits = newDigits.slice(0, 6);
+
+    // Format as MM/YYYY
+    let formatted = limitedDigits;
+    if (limitedDigits.length >= 3) {
+      formatted = limitedDigits.slice(0, 2) + '/' + limitedDigits.slice(2);
+    }
+
+    // Count digits before cursor in the user's input
+    let digitsBeforeCursor = 0;
+    for (let i = 0; i < cursorPosition && i < value.length; i++) {
+      if (/\d/.test(value[i])) {
+        digitsBeforeCursor++;
+      }
+    }
+
+    // Find where cursor should be in formatted string (after the Nth digit)
+    let newCursorPosition = 0;
+    let digitsSeen = 0;
+
+    for (let i = 0; i < formatted.length; i++) {
+      if (/\d/.test(formatted[i])) {
+        digitsSeen++;
+        if (digitsSeen === digitsBeforeCursor) {
+          // Cursor should be right after this digit
+          newCursorPosition = i + 1;
+          break;
+        }
+      }
+    }
+
+    // If we've seen fewer digits than we want to be after, put cursor at end
+    if (digitsSeen < digitsBeforeCursor) {
+      newCursorPosition = formatted.length;
+    }
+
+    // Special case: if cursor was at position 0, keep it at 0
+    if (digitsBeforeCursor === 0) {
+      newCursorPosition = 0;
+    }
+
+    setFormData(prev => ({ ...prev, [fieldName]: formatted }));
+    setHasUnsavedChanges(true);
+
+    if (errors[fieldName]) {
+      setErrors(prev => ({ ...prev, [fieldName]: '' }));
     }
 
     // Restore cursor position after React updates
@@ -835,27 +906,22 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                 <h4>Linha do Tempo</h4>
                 <div className="form-group">
                   <label htmlFor="governmentRetirementStartYears" className="label-with-icon">
-                    Início da Aposentadoria do Governo (anos)
+                    Início da Aposentadoria do Governo
                     <AiInfoButton
                       fieldKey="government_retirement_start_years"
                       title="Início da Aposentadoria do Governo"
-                      prompt={`Me explique qu esse valor representa o número de anos a partir da data atual em que a aposentadoria começará a ser recebida. Inclua também o link para o site do governo em que pode ser feita a simulação da aposentadoria, coloque como um texto clicável, faça 1 ou 2 quebras de linha antes do link. Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
+                      prompt={`Me explique que esse valor representa a data em que a aposentadoria começará a ser recebida. Inclua também o link para o site do governo em que pode ser feita a simulação da aposentadoria, coloque como um texto clicável, faça 1 ou 2 quebras de linha antes do link. Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
                     />
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     id="governmentRetirementStartYears"
                     name="governmentRetirementStartYears"
-                    value={isNaN(formData.governmentRetirementStartYears ?? NaN) ? '' : formData.governmentRetirementStartYears}
-                    onChange={(e) => {
-                      const v = e.target.value === '' ? NaN : parseInt(e.target.value, 10);
-                      setFormData(prev => ({ ...prev, governmentRetirementStartYears: v }));
-                      setHasUnsavedChanges(true);
-                      if (errors.governmentRetirementStartYears) setErrors(prev => ({ ...prev, governmentRetirementStartYears: '' }));
-                    }}
-                    onFocus={handleNumberFocus}
-                    min={0}
-                    max={100}
+                    value={formData.governmentRetirementStartYears || ''}
+                    onChange={(e) => handleMonthYearDateChange(e, 'governmentRetirementStartYears')}
+                    onKeyDown={handleDateKeyDown}
+                    placeholder="MM/AAAA"
+                    maxLength={7}
                     className={errors.governmentRetirementStartYears ? 'error' : ''}
                   />
                   {errors.governmentRetirementStartYears && <span className="error-message">{errors.governmentRetirementStartYears}</span>}
@@ -863,27 +929,22 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
 
                 <div className="form-group">
                   <label htmlFor="endOfSalaryYears" className="label-with-icon">
-                    Fim do Salário (anos)
+                    Fim do Salário
                     <AiInfoButton
                       fieldKey="end_of_salary_years"
                       title="Fim do Salário"
-                      staticText="Em quantos anos a partir de hoje, você deixará de ter salário?"
+                      staticText="Em que data você deixará de ter salário?"
                     />
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     id="endOfSalaryYears"
                     name="endOfSalaryYears"
-                    value={isNaN(formData.endOfSalaryYears) ? '' : formData.endOfSalaryYears}
-                    onChange={(e) => {
-                      const v = e.target.value === '' ? NaN : parseInt(e.target.value, 10);
-                      setFormData(prev => ({ ...prev, endOfSalaryYears: v }));
-                      setHasUnsavedChanges(true);
-                      if (errors.endOfSalaryYears) setErrors(prev => ({ ...prev, endOfSalaryYears: '' }));
-                    }}
-                    onFocus={handleNumberFocus}
-                    min={0}
-                    max={100}
+                    value={formData.endOfSalaryYears || ''}
+                    onChange={(e) => handleMonthYearDateChange(e, 'endOfSalaryYears')}
+                    onKeyDown={handleDateKeyDown}
+                    placeholder="MM/AAAA"
+                    maxLength={7}
                     className={errors.endOfSalaryYears ? 'error' : ''}
                   />
                   {errors.endOfSalaryYears && <span className="error-message">{errors.endOfSalaryYears}</span>}

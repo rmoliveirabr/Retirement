@@ -33,6 +33,8 @@ const getDateDisplay = (dateString: string) => {
   return '';
 };
 
+
+
 const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   profile,
   onClose,
@@ -52,8 +54,8 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
     monthlyNetSalary: profile.monthlySalaryNet || 0,
     govPension: profile.governmentRetirementIncome || 0,
-    yearsUntilSalaryEnds: profile.endOfSalaryYears || 0,
-    yearsUntilGovRetirement: profile.governmentRetirementStartYears || 0,
+    yearsUntilSalaryEnds: getDateDisplay(profile.endOfSalaryYears || ''),
+    yearsUntilGovRetirement: getDateDisplay(profile.governmentRetirementStartYears || ''),
     monthlyExpenses: profile.monthlyExpenseRecurring || 0,
     monthlyRent: profile.rent || 0,
     oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
@@ -79,8 +81,8 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
     monthlyNetSalary: profile.monthlySalaryNet || 0,
     govPension: profile.governmentRetirementIncome || 0,
-    yearsUntilSalaryEnds: profile.endOfSalaryYears || 0,
-    yearsUntilGovRetirement: profile.governmentRetirementStartYears || 0,
+    yearsUntilSalaryEnds: getDateDisplay(profile.endOfSalaryYears || ''),
+    yearsUntilGovRetirement: getDateDisplay(profile.governmentRetirementStartYears || ''),
     monthlyExpenses: profile.monthlyExpenseRecurring || 0,
     monthlyRent: profile.rent || 0,
     oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
@@ -190,7 +192,8 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     const value = input.value;
-    const oldValue = (simulationParams.startDate as string) || '';
+    const name = input.name;
+    const oldValue = (simulationParams[name] as string) || '';
 
     // Get only digits from both values
     const oldDigits = oldValue.replace(/\D/g, '');
@@ -245,7 +248,7 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       newCursorPosition = 0;
     }
 
-    setSimulationParams(prev => ({ ...prev, startDate: formatted }));
+    setSimulationParams(prev => ({ ...prev, [name]: formatted }));
 
     // Restore cursor position after React updates
     setTimeout(() => {
@@ -268,6 +271,9 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
         } else {
           sanitized[key] = val;
         }
+      } else if (key === 'yearsUntilSalaryEnds' || key === 'yearsUntilGovRetirement') {
+        // Pass through date strings for these fields
+        sanitized[key] = val;
       } else {
         sanitized[key] = (val === '' || val === null || val === undefined) ? 0 : Number(val);
       }
@@ -335,8 +341,8 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
       monthlyNetSalary: profile.monthlySalaryNet || 0,
       govPension: profile.governmentRetirementIncome || 0,
-      yearsUntilSalaryEnds: profile.endOfSalaryYears || 0,
-      yearsUntilGovRetirement: profile.governmentRetirementStartYears || 0,
+      yearsUntilSalaryEnds: getDateDisplay(profile.endOfSalaryYears || ''),
+      yearsUntilGovRetirement: getDateDisplay(profile.governmentRetirementStartYears || ''),
       monthlyExpenses: profile.monthlyExpenseRecurring || 0,
       monthlyRent: profile.rent || 0,
       oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
@@ -388,11 +394,59 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
       {activeTab === 'simulator' && (
         <div className="simulator-form">
-          <div className="form-description">
-            <p>Ajuste os parâmetros abaixo para explorar diferentes cenários. As mudanças não afetarão seu perfil até que você salve.</p>
-          </div>
-
           <div className="form-grid">
+            {/* Timeline Column */}
+            <div className="form-column">
+              <h4 className="column-header">
+                <span className="column-icon">📅</span>
+                Linha do Tempo
+              </h4>
+              <div className="column-fields">
+                <div className="form-group">
+                  <label htmlFor="salaryEndDate">Data Fim do Salário</label>
+                  <input
+                    id="salaryEndDate"
+                    type="text"
+                    value={simulationParams.yearsUntilSalaryEnds as string}
+                    onChange={handleDateChange}
+                    onKeyDown={handleDateKeyDown}
+                    name="yearsUntilSalaryEnds"
+                    placeholder="MM/AAAA"
+                    maxLength={7}
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="startDate">Data de Início da Aposentadoria</label>
+                  <input
+                    id="startDate"
+                    type="text"
+                    value={simulationParams.startDate}
+                    onChange={handleDateChange}
+                    onKeyDown={handleDateKeyDown}
+                    name="startDate"
+                    placeholder="MM/AAAA"
+                    maxLength={7}
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="govRetirementDate">Data Aposentadoria Gov.</label>
+                  <input
+                    id="govRetirementDate"
+                    type="text"
+                    value={simulationParams.yearsUntilGovRetirement as string}
+                    onChange={handleDateChange}
+                    onKeyDown={handleDateKeyDown}
+                    name="yearsUntilGovRetirement"
+                    placeholder="MM/AAAA"
+                    maxLength={7}
+                    className="form-control"
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Assets Column */}
             <div className="form-column">
               <h4 className="column-header">
@@ -472,42 +526,6 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                     onFocus={(e) => handleCurrencyFocus(e, 'govPension')}
                     onBlur={() => handleCurrencyBlur('govPension')}
                     name="govPension"
-                    className="form-control"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="salaryYears">Anos até fim do salário</label>
-                  <input
-                    id="salaryYears"
-                    type="number"
-                    value={simulationParams.yearsUntilSalaryEnds}
-                    onChange={(e) => handleInputChange('yearsUntilSalaryEnds', e.target.value)}
-                    name="yearsUntilSalaryEnds"
-                    className="form-control"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="govYears">Anos até aposentadoria gov.</label>
-                  <input
-                    id="govYears"
-                    type="number"
-                    value={simulationParams.yearsUntilGovRetirement}
-                    onChange={(e) => handleInputChange('yearsUntilGovRetirement', e.target.value)}
-                    name="yearsUntilGovRetirement"
-                    className="form-control"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="startDate">Data de Início da Aposentadoria</label>
-                  <input
-                    id="startDate"
-                    type="text"
-                    value={simulationParams.startDate}
-                    onChange={handleDateChange}
-                    onKeyDown={handleDateKeyDown}
-                    name="startDate"
-                    placeholder="MM/AAAA"
-                    maxLength={7}
                     className="form-control"
                   />
                 </div>

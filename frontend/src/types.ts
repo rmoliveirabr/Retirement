@@ -9,13 +9,13 @@ export interface Profile {
   fixedAssets: number;
   monthlySalaryNet: number;
   governmentRetirementIncome: number;
-  governmentRetirementStartYears: number;
+  governmentRetirementStartYears?: string;
   governmentRetirementAdjustment: number;
   monthlyReturnRate: number;
   fixedAssetsGrowthRate: number;
   investmentTaxRate: number;
   investmentTaxablePercentage: number;
-  endOfSalaryYears: number;
+  endOfSalaryYears?: string;
   monthlyExpenseRecurring: number;
   rent: number;
   oneTimeAnnualExpense: number;
@@ -29,7 +29,7 @@ export interface ProfileCreate {
   email: string;
   baseAge: number;
   startDate?: string;
-  governmentRetirementStartYears?: number;
+  governmentRetirementStartYears?: string;
   totalAssets: number;
   fixedAssets: number;
   monthlySalaryNet: number;
@@ -39,7 +39,7 @@ export interface ProfileCreate {
   fixedAssetsGrowthRate: number;
   investmentTaxRate: number;
   investmentTaxablePercentage: number;
-  endOfSalaryYears: number;
+  endOfSalaryYears?: string;
   monthlyExpenseRecurring: number;
   rent: number;
   oneTimeAnnualExpense: number;
@@ -50,7 +50,7 @@ export interface ProfileUpdate {
   email?: string;
   baseAge?: number;
   startDate?: string;
-  governmentRetirementStartYears?: number;
+  governmentRetirementStartYears?: string;
   totalAssets?: number;
   fixedAssets?: number;
   monthlySalaryNet?: number;
@@ -60,7 +60,7 @@ export interface ProfileUpdate {
   fixedAssetsGrowthRate?: number;
   investmentTaxRate?: number;
   investmentTaxablePercentage?: number;
-  endOfSalaryYears?: number;
+  endOfSalaryYears?: string;
   monthlyExpenseRecurring?: number;
   rent?: number;
   oneTimeAnnualExpense?: number;
@@ -111,8 +111,8 @@ export interface ScenarioRequest {
   fixedAssetsGrowthRate?: number;
   investmentTaxRate?: number;
   investmentTaxablePercentage?: number;
-  endOfSalaryYears?: number;
-  governmentRetirementStartYears?: number;
+  endOfSalaryYears?: string;
+  governmentRetirementStartYears?: string;
   governmentRetirementAdjustment?: number;
   monthlyExpenseRecurring?: number;
   rent?: number;

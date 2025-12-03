@@ -76,13 +76,27 @@ export class RetirementCalculatorService {
         }
 
         // Determine government_retirement_start_date (when government pension/retirement income starts)
-        // Count years from TODAY, not from retirement start date
-        const governmentRetirementStartYears = profile.governmentRetirementStartYears || 0;
-        const governmentRetirementStartDate = new Date(
-            today.getFullYear() + governmentRetirementStartYears,
-            today.getMonth(),
-            today.getDate(),
-        );
+        // Parse from MM/YYYY format if provided
+        let governmentRetirementStartDate: Date;
+        if (profile.governmentRetirementStartYears) {
+            try {
+                // Parse MM/YYYY format
+                const parts = profile.governmentRetirementStartYears.split('/');
+                if (parts.length === 2) {
+                    const month = parseInt(parts[0], 10) - 1; // Month is 0-indexed
+                    const year = parseInt(parts[1], 10);
+                    governmentRetirementStartDate = new Date(year, month, 1);
+                } else {
+                    // Fallback to far future if invalid
+                    governmentRetirementStartDate = new Date(today.getFullYear() + 100, 0, 1);
+                }
+            } catch (e) {
+                governmentRetirementStartDate = new Date(today.getFullYear() + 100, 0, 1);
+            }
+        } else {
+            // If not provided, set to far future (won't receive government retirement)
+            governmentRetirementStartDate = new Date(today.getFullYear() + 100, 0, 1);
+        }
 
         // For compatibility, retirement_start_date refers to timeline start
         const retirementStartDate = timelineStartDate;
@@ -91,12 +105,27 @@ export class RetirementCalculatorService {
         // This allows us to show the pre-retirement accumulation period
         const baseYear = today.getFullYear();
 
-        // Salary end date measured from TODAY
-        const endOfSalaryDate = new Date(
-            today.getFullYear() + profile.endOfSalaryYears,
-            today.getMonth(),
-            today.getDate(),
-        );
+        // Salary end date - parse from MM/YYYY format if provided
+        let endOfSalaryDate: Date;
+        if (profile.endOfSalaryYears) {
+            try {
+                // Parse MM/YYYY format
+                const parts = profile.endOfSalaryYears.split('/');
+                if (parts.length === 2) {
+                    const month = parseInt(parts[0], 10) - 1; // Month is 0-indexed
+                    const year = parseInt(parts[1], 10);
+                    endOfSalaryDate = new Date(year, month, 1);
+                } else {
+                    // Fallback to far future if invalid
+                    endOfSalaryDate = new Date(today.getFullYear() + 100, 0, 1);
+                }
+            } catch (e) {
+                endOfSalaryDate = new Date(today.getFullYear() + 100, 0, 1);
+            }
+        } else {
+            // If not provided, assume salary continues indefinitely
+            endOfSalaryDate = new Date(today.getFullYear() + 100, 0, 1);
+        }
 
         // Initial investment value (liquid)
         const investment = Math.max(0.0, profile.totalAssets - profile.fixedAssets);
@@ -200,7 +229,9 @@ export class RetirementCalculatorService {
             for (let m = 0; m < monthsInPeriod; m++) {
                 const monthDate = addMonthsToDate(yearStart, m);
 
-                const inflationYears = isInRetirement ? yearsSinceRetirementStart : y;
+                // Use consistent inflation calculation based on year index
+                // This ensures expenses grow continuously regardless of retirement status
+                const inflationYears = y;
 
                 // monthly expenses adjusted
                 const monthlyExpense =
@@ -213,7 +244,7 @@ export class RetirementCalculatorService {
 
                 // monthly income: salary if active
                 let monthlySalary = 0.0;
-                if (monthDate <= endOfSalaryDate) {
+                if (monthDate < endOfSalaryDate) {
                     monthlySalary =
                         profile.monthlySalaryNet * Math.pow(1 + profile.annualInflation, inflationYears);
                 }
