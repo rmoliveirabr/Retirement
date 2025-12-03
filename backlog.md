@@ -1,6 +1,5 @@
 ## To Fix
 - see how to show 'Ativos fixos', and allow it to be used as a backup for 'Ativos totais'
-- there is an conceptual issue - ativos is the money the user has now, but we use it 'as is' for the beginning of the retirement timeline. Review this concept urgently.
 - Review the healthyness of the profile using AI (cache and update only when the profile is changed)
 - Review "Projeções de Aposentadoria"
 
@@ -13,6 +12,12 @@
 - **Deployment**: Cloud hosting
 
 ## Done
+- **Scenario Simulation Fix** (Dec 2, 2025): Fixed issue where changing "Data de Início da Aposentadoria" in the simulator didn't update the calculation or row colors. Added `startDate` to the scenario request payload.
+- **Scenario Simulator Enhancement** (Dec 2, 2025): Added "Data de Início da Aposentadoria" field to scenario simulator with MM/YYYY format support.
+- **Government Retirement Calculation Fix** (Dec 2, 2025): "Anos para aposentadoria do governo" now counts from current year instead of retirement start date.
+- **Partial Year 1 Support** (Dec 2, 2025): Year 1 now spans from current month to retirement start month (partial year). Subsequent years align to retirement anniversary for consistent tracking.
+- **Date Format Update** (Dec 2, 2025): Changed "Data de Início da Aposentadoria" to use MM/AAAA format for better user experience.
+- **Timeline Calculations** (Dec 2, 2025): Timeline now starts from current year instead of retirement year, showing pre-retirement accumulation period with proper inflation/growth projections. Pre-retirement rows are visually distinguished with faded styling.
 - **Profile Update Fix** (Dec 1, 2025): Fixed 403 Forbidden error by correctly handling ObjectId vs String comparison in ownership checks
 - **Profile Caching Fix** (Dec 1, 2025): Fixed issue where profiles persisted after logout/user switch by adding user dependency to data fetching effect
 - **Authentication** (Dec 1, 2025): Complete user authentication system with email/password, JWT tokens, password reset, admin features, and multiple profiles per user

@@ -16,6 +16,23 @@ interface ScenarioSimulatorProps {
   onSaveProfileAndRecalculate?: (profile: Profile) => void;
 }
 
+const getDateDisplay = (dateString: string) => {
+  if (!dateString) return '';
+
+  // If already in MM/YYYY format, return as-is
+  if (/^\d{2}\/\d{4}$/.test(dateString)) {
+    return dateString;
+  }
+
+  // If ISO format (YYYY-MM-DD), convert to MM/YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month] = dateString.split('-');
+    return `${month}/${year}`;
+  }
+
+  return '';
+};
+
 const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   profile,
   onClose,
@@ -29,6 +46,7 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('simulator');
   const [simulationParams, setSimulationParams] = useState<Record<string, number | string>>({
+    startDate: getDateDisplay(profile.startDate || ''),
     totalAssets: profile.totalAssets || 0,
     fixedAssets: profile.fixedAssets || 0,
     fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
@@ -55,6 +73,7 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
   const [percentInput, setPercentInput] = useState<Record<string, string>>({});
 
   const initialParams = {
+    startDate: getDateDisplay(profile.startDate || ''),
     totalAssets: profile.totalAssets || 0,
     fixedAssets: profile.fixedAssets || 0,
     fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
@@ -149,6 +168,91 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     setPercentInput(prev => ({ ...prev, [name]: display }));
   };
 
+  const handleDateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const { key } = e;
+
+    // Allow: backspace, delete, tab, escape, enter, arrows, home, end
+    if (['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(key)) {
+      return;
+    }
+
+    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    if ((e.ctrlKey || e.metaKey) && ['a', 'c', 'v', 'x'].includes(key.toLowerCase())) {
+      return;
+    }
+
+    // Only allow numbers and slash
+    if (!/^[0-9/]$/.test(key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const value = input.value;
+    const oldValue = (simulationParams.startDate as string) || '';
+
+    // Get only digits from both values
+    const oldDigits = oldValue.replace(/\D/g, '');
+    const newDigits = value.replace(/\D/g, '');
+
+    // If digits haven't changed, user just clicked or moved cursor - don't process
+    if (oldDigits === newDigits) {
+      return;
+    }
+
+    const cursorPosition = input.selectionStart || 0;
+
+    // Limit to 6 digits for MM/YYYY
+    const limitedDigits = newDigits.slice(0, 6);
+
+    // Format as MM/YYYY
+    let formatted = limitedDigits;
+    if (limitedDigits.length >= 3) {
+      formatted = limitedDigits.slice(0, 2) + '/' + limitedDigits.slice(2);
+    }
+
+    // Count digits before cursor in the user's input
+    let digitsBeforeCursor = 0;
+    for (let i = 0; i < cursorPosition && i < value.length; i++) {
+      if (/\d/.test(value[i])) {
+        digitsBeforeCursor++;
+      }
+    }
+
+    // Find where cursor should be in formatted string (after the Nth digit)
+    let newCursorPosition = 0;
+    let digitsSeen = 0;
+
+    for (let i = 0; i < formatted.length; i++) {
+      if (/\d/.test(formatted[i])) {
+        digitsSeen++;
+        if (digitsSeen === digitsBeforeCursor) {
+          // Cursor should be right after this digit
+          newCursorPosition = i + 1;
+          break;
+        }
+      }
+    }
+
+    // If we've seen fewer digits than we want to be after, put cursor at end
+    if (digitsSeen < digitsBeforeCursor) {
+      newCursorPosition = formatted.length;
+    }
+
+    // Special case: if cursor was at position 0, keep it at 0
+    if (digitsBeforeCursor === 0) {
+      newCursorPosition = 0;
+    }
+
+    setSimulationParams(prev => ({ ...prev, startDate: formatted }));
+
+    // Restore cursor position after React updates
+    setTimeout(() => {
+      input.setSelectionRange(newCursorPosition, newCursorPosition);
+    }, 0);
+  };
+
   const handleReset = () => {
     setSimulationParams({ ...initialParams });
   };
@@ -157,7 +261,16 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     const sanitized: any = {};
     Object.keys(simulationParams).forEach(key => {
       const val = simulationParams[key];
-      sanitized[key] = (val === '' || val === null || val === undefined) ? 0 : Number(val);
+      if (key === 'startDate') {
+        if (val && typeof val === 'string' && /^\d{2}\/\d{4}$/.test(val)) {
+          const [month, year] = val.split('/');
+          sanitized[key] = `${year}-${month}-01`;
+        } else {
+          sanitized[key] = val;
+        }
+      } else {
+        sanitized[key] = (val === '' || val === null || val === undefined) ? 0 : Number(val);
+      }
     });
     return sanitized;
   };
@@ -191,6 +304,7 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     const params = getSanitizedParams();
     const updatedProfile = {
       ...profile,
+      startDate: params.startDate as string,
       totalAssets: params.totalAssets,
       fixedAssets: params.fixedAssets,
       fixedAssetsGrowthRate: params.fixedAssetsGrowthRate,
@@ -215,6 +329,7 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
 
   useEffect(() => {
     setSimulationParams({
+      startDate: getDateDisplay(profile.startDate || ''),
       totalAssets: profile.totalAssets || 0,
       fixedAssets: profile.fixedAssets || 0,
       fixedAssetsGrowthRate: profile.fixedAssetsGrowthRate || 0,
@@ -379,6 +494,20 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                     value={simulationParams.yearsUntilGovRetirement}
                     onChange={(e) => handleInputChange('yearsUntilGovRetirement', e.target.value)}
                     name="yearsUntilGovRetirement"
+                    className="form-control"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="startDate">Data de Início da Aposentadoria</label>
+                  <input
+                    id="startDate"
+                    type="text"
+                    value={simulationParams.startDate}
+                    onChange={handleDateChange}
+                    onKeyDown={handleDateKeyDown}
+                    name="startDate"
+                    placeholder="MM/AAAA"
+                    maxLength={7}
                     className="form-control"
                   />
                 </div>

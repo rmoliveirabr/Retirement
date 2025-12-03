@@ -13,6 +13,7 @@ interface TimelineRow {
     taxes_over_investments: number;
     net_cashflow: number;
     final_value: number;
+    isPreRetirement: boolean;
 }
 
 export interface RetirementCalculation {
@@ -75,30 +76,20 @@ export class RetirementCalculatorService {
         }
 
         // Determine government_retirement_start_date (when government pension/retirement income starts)
+        // Count years from TODAY, not from retirement start date
         const governmentRetirementStartYears = profile.governmentRetirementStartYears || 0;
         const governmentRetirementStartDate = new Date(
-            timelineStartDate.getFullYear() + governmentRetirementStartYears,
-            timelineStartDate.getMonth(),
-            timelineStartDate.getDate(),
+            today.getFullYear() + governmentRetirementStartYears,
+            today.getMonth(),
+            today.getDate(),
         );
 
         // For compatibility, retirement_start_date refers to timeline start
         const retirementStartDate = timelineStartDate;
 
-        // Determine a base year aligned to retirement_start_date
-        let baseYear: number;
-        if (retirementStartDate) {
-            const daysToRetirement =
-                (retirementStartDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
-            const actualYearsToRetirement = daysToRetirement / 365.25;
-            if (Math.abs(actualYearsToRetirement - yearsToRetirement) > 0.5) {
-                baseYear = retirementStartDate.getFullYear() - Math.floor(actualYearsToRetirement);
-            } else {
-                baseYear = retirementStartDate.getFullYear() - yearsToRetirement;
-            }
-        } else {
-            baseYear = today.getFullYear();
-        }
+        // CHANGED: Start timeline from current year, not retirement year
+        // This allows us to show the pre-retirement accumulation period
+        const baseYear = today.getFullYear();
 
         // Salary end date measured from TODAY
         const endOfSalaryDate = new Date(
@@ -145,9 +136,45 @@ export class RetirementCalculatorService {
         let y = 0;
 
         while (y < maxYears) {
-            const anchorMonth = retirementStartDate.getMonth();
-            const yearStart = new Date(baseYear + y, anchorMonth, 1);
-            const yearEnd = new Date(baseYear + y + 1, anchorMonth, 1);
+            // Year 1: From current month to NEXT occurrence of retirement month (max 12 months)
+            // Year 2+: Aligned to retirement anniversary (full 12-month years)
+            let yearStart: Date;
+            let yearEnd: Date;
+            let monthsInPeriod: number;
+
+            if (y === 0) {
+                // Year 1: From today to next occurrence of retirement month
+                yearStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+                const retirementMonth = retirementStartDate.getMonth();
+                const currentMonth = today.getMonth();
+
+                // Find the next occurrence of the retirement month
+                if (retirementMonth > currentMonth) {
+                    // Retirement month is later this year
+                    yearEnd = new Date(today.getFullYear(), retirementMonth, 1);
+                } else {
+                    // Retirement month is next year
+                    yearEnd = new Date(today.getFullYear() + 1, retirementMonth, 1);
+                }
+
+                // Calculate months in Year 1
+                const yearDiff = yearEnd.getFullYear() - yearStart.getFullYear();
+                const monthDiff = yearEnd.getMonth() - yearStart.getMonth();
+                monthsInPeriod = yearDiff * 12 + monthDiff;
+                if (monthsInPeriod <= 0) monthsInPeriod = 12; // Fallback to 12 if same month
+            } else {
+                // Subsequent years: Aligned to retirement anniversary
+                const anchorMonth = retirementStartDate.getMonth();
+                // Start from the yearEnd of Year 1, then add (y-1) years
+                const year1EndYear = (retirementStartDate.getMonth() > today.getMonth() || (retirementStartDate.getMonth() === today.getMonth() && retirementStartDate.getDate() >= today.getDate())) ?
+                    today.getFullYear() :
+                    today.getFullYear() + 1;
+
+                yearStart = new Date(year1EndYear + y - 1, anchorMonth, 1);
+                yearEnd = new Date(year1EndYear + y, anchorMonth, 1);
+                monthsInPeriod = 12; // Always 12 months for years after Year 1
+            }
 
             const age = profile.baseAge + y;
             if (age > targetAge) {
@@ -163,14 +190,14 @@ export class RetirementCalculatorService {
             let totalIncomeRetirementYear = 0.0;
 
             // Calculate years since retirement start for inflation purposes
-            const currentYear = baseYear + y;
+            const currentYear = yearStart.getFullYear();
             const startYear = retirementStartDate.getFullYear();
             const yearsSinceRetirementStart = Math.max(0, currentYear - startYear);
             const isInRetirement = currentYear >= startYear;
 
             // monthly loop to compound monthly changes
             let monthlyValue = currentValue;
-            for (let m = 0; m < 12; m++) {
+            for (let m = 0; m < monthsInPeriod; m++) {
                 const monthDate = addMonthsToDate(yearStart, m);
 
                 const inflationYears = isInRetirement ? yearsSinceRetirementStart : y;
@@ -236,38 +263,28 @@ export class RetirementCalculatorService {
                 pendingTax = 0.0;
             }
 
-            // Append to timeline only from retirement_start_date onward
-            if (isInRetirement) {
-                const yearsSinceRetirement = currentYear - startYear;
+            // CHANGED: Add ALL years to timeline, not just retirement years
+            // Calculate year number starting from 1 at current year
+            const yearNumber = y + 1;
 
-                // Calculate display periods based on the actual year being simulated
-                // For year 1 (yearsSinceRetirement = 0), show the period from retirement start to one year later
-                const displayStart = new Date(
-                    startYear + yearsSinceRetirement,
-                    retirementStartDate.getMonth(),
-                    retirementStartDate.getDate()
-                );
+            // Use the actual yearStart and yearEnd for display
+            const displayStart = yearStart;
+            const displayEnd = yearEnd;
 
-                const displayEnd = new Date(
-                    startYear + yearsSinceRetirement + 1,
-                    retirementStartDate.getMonth(),
-                    retirementStartDate.getDate()
-                );
-
-                timeline.push({
-                    year: yearsSinceRetirement + 1,
-                    age: age,
-                    period: `${this.formatDate(displayStart)} -> ${this.formatDate(displayEnd)}`,
-                    value_invested: Math.round(currentValue * 100) / 100,
-                    total_expenses: Math.round(totalExpensesYear * 100) / 100,
-                    total_income_salary: Math.round(totalIncomeSalaryYear * 100) / 100,
-                    total_income_retirement: Math.round(totalIncomeRetirementYear * 100) / 100,
-                    total_to_be_added: Math.round(totalToBeAdded * 100) / 100,
-                    taxes_over_investments: Math.round(taxesPaid * 100) / 100,
-                    net_cashflow: Math.round(netCashflow * 100) / 100,
-                    final_value: Math.round(finalValue * 100) / 100,
-                });
-            }
+            timeline.push({
+                year: yearNumber,
+                age: age,
+                period: `${this.formatDate(displayStart)} -> ${this.formatDate(displayEnd)}`,
+                value_invested: Math.round(currentValue * 100) / 100,
+                total_expenses: Math.round(totalExpensesYear * 100) / 100,
+                total_income_salary: Math.round(totalIncomeSalaryYear * 100) / 100,
+                total_income_retirement: Math.round(totalIncomeRetirementYear * 100) / 100,
+                total_to_be_added: Math.round(totalToBeAdded * 100) / 100,
+                taxes_over_investments: Math.round(taxesPaid * 100) / 100,
+                net_cashflow: Math.round(netCashflow * 100) / 100,
+                final_value: Math.round(finalValue * 100) / 100,
+                isPreRetirement: !isInRetirement,
+            });
 
             // Compute tax on this year's investment gains, to be paid next year
             const gain = finalValueBeforeTax - currentValue - netCashflow;

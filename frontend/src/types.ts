@@ -102,6 +102,7 @@ export interface ScenarioRequest {
   retirementDurationYears?: number;
   targetAge?: number;
   // Optional profile overrides
+  startDate?: string;
   totalAssets?: number;
   fixedAssets?: number;
   monthlySalaryNet?: number;

@@ -336,7 +336,16 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
                       </thead>
                       <tbody>
                         {activeCalculation.assumptions.timeline.map((row: any, idx: number) => (
-                          <tr key={idx} className={row.final_value < 0 ? 'depleted' : ''}>
+                          <tr
+                            key={idx}
+                            className={
+                              row.final_value < 0
+                                ? 'depleted'
+                                : row.isPreRetirement
+                                  ? 'pre-retirement'
+                                  : ''
+                            }
+                          >
                             <td>{row.year}</td>
                             <td>{row.age}</td>
                             <td>{row.period}</td>

@@ -188,6 +188,7 @@ function App() {
       retirementDurationYears: 25,
       targetAge: targetAge,
       // Override with scenario parameters
+      startDate: scenarioParams.startDate,
       totalAssets: scenarioParams.totalAssets,
       fixedAssets: scenarioParams.fixedAssets,
       monthlySalaryNet: scenarioParams.monthlyNetSalary,

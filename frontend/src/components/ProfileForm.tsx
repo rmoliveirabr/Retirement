@@ -194,14 +194,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
 
     const processedFormData = { ...formData };
 
-    // Convert date from DD/MM/YYYY to YYYY-MM-DD for backend
+    // Convert date from MM/YYYY to YYYY-MM-01 for backend (first day of month)
     if (processedFormData.startDate) {
       const dateStr = processedFormData.startDate;
-      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
-        const [day, month, year] = dateStr.split('/');
-        processedFormData.startDate = `${year}-${month}-${day}`;
+      if (/^\d{2}\/\d{4}$/.test(dateStr)) {
+        const [month, year] = dateStr.split('/');
+        processedFormData.startDate = `${year}-${month}-01`;
       } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-        // If it's neither DD/MM/YYYY nor YYYY-MM-DD, clear it
+        // If it's neither MM/YYYY nor YYYY-MM, clear it
         processedFormData.startDate = '';
       }
     }
@@ -300,16 +300,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
 
     const cursorPosition = input.selectionStart || 0;
 
-    // Limit to 8 digits
-    const limitedDigits = newDigits.slice(0, 8);
+    // Limit to 6 digits for MM/YYYY
+    const limitedDigits = newDigits.slice(0, 6);
 
-    // Format as DD/MM/YYYY
+    // Format as MM/YYYY
     let formatted = limitedDigits;
     if (limitedDigits.length >= 3) {
       formatted = limitedDigits.slice(0, 2) + '/' + limitedDigits.slice(2);
-    }
-    if (limitedDigits.length >= 5) {
-      formatted = limitedDigits.slice(0, 2) + '/' + limitedDigits.slice(2, 4) + '/' + limitedDigits.slice(4);
     }
 
     // Count digits before cursor in the user's input
@@ -370,15 +367,15 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
   const getDateDisplay = (dateString: string) => {
     if (!dateString) return '';
 
-    // If already in DD/MM/YYYY format, return as-is
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+    // If already in MM/YYYY format, return as-is
+    if (/^\d{2}\/\d{4}$/.test(dateString)) {
       return dateString;
     }
 
-    // If ISO format (YYYY-MM-DD), convert to DD/MM/YYYY
+    // If ISO format (YYYY-MM-DD), convert to MM/YYYY
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-      const [year, month, day] = dateString.split('-');
-      return `${day}/${month}/${year}`;
+      const [year, month] = dateString.split('-');
+      return `${month}/${year}`;
     }
 
     return '';
@@ -547,8 +544,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                     value={formData.startDate || ''}
                     onChange={handleDateChange}
                     onKeyDown={handleDateKeyDown}
-                    placeholder="DD/MM/AAAA"
-                    maxLength={10}
+                    placeholder="MM/AAAA"
+                    maxLength={7}
                   />
                 </div>
 
@@ -842,7 +839,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                     <AiInfoButton
                       fieldKey="government_retirement_start_years"
                       title="Início da Aposentadoria do Governo"
-                      staticText="Em quantos anos a partir do início da data inicial do cálculo, a aposentadoria do governo será iniciada?"
+                      prompt={`Me explique qu esse valor representa o número de anos a partir da data atual em que a aposentadoria começará a ser recebida. Inclua também o link para o site do governo em que pode ser feita a simulação da aposentadoria, coloque como um texto clicável, faça 1 ou 2 quebras de linha antes do link. Não ofereça para buscar valores adicionais, e responda somente com a informação, sem conteúdo conversacional (como "Claro!", ou similares).`}
                     />
                   </label>
                   <input
@@ -870,7 +867,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                     <AiInfoButton
                       fieldKey="end_of_salary_years"
                       title="Fim do Salário"
-                      staticText="Em quantos anos a partir do início da data inicial do cálculo, você deixará de ter salário?"
+                      staticText="Em quantos anos a partir de hoje, você deixará de ter salário?"
                     />
                   </label>
                   <input

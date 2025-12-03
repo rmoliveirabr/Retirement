@@ -579,6 +579,17 @@
   background: color-mix(in srgb, var(--color-accent) 50%, transparent);
 }
 
+/* Pre-retirement rows (faded to indicate they're not the main retirement period) */
+.timeline-table tr.pre-retirement td {
+  opacity: 0.5;
+  font-style: italic;
+  background: color-mix(in srgb, var(--color-muted) 10%, transparent);
+}
+
+.timeline-table tr.pre-retirement:hover td {
+  opacity: 0.7;
+}
+
 .timeline-table tr.depleted td {
   background: #fef2f2;
   color: var(--color-destructive);
