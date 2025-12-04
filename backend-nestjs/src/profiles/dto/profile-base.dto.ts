@@ -1,5 +1,4 @@
 import {
-    IsEmail,
     IsInt,
     IsNumber,
     IsOptional,
@@ -13,9 +12,6 @@ import { Type } from 'class-transformer';
 export class ProfileBaseDto {
     @IsString()
     profileName: string;
-
-    @IsEmail()
-    email: string;
 
     @IsInt()
     @Min(18)
@@ -92,11 +88,6 @@ export class ProfileBaseDto {
     @Min(0)
     @Type(() => Number)
     monthlyExpenseRecurring: number;
-
-    @IsNumber()
-    @Min(0)
-    @Type(() => Number)
-    rent: number;
 
     @IsNumber()
     @Min(0)

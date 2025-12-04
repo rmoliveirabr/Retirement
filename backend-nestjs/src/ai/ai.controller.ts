@@ -19,6 +19,8 @@ export class AiController {
         );
     }
 
+
+
     @Post('info')
     async getInfo(@Body() request: InfoRequestDto) {
         return this.aiService.getInfo(
@@ -27,4 +29,5 @@ export class AiController {
             request.forceRefresh,
         );
     }
+
 }

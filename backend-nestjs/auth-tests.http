@@ -72,7 +72,6 @@ Content-Type: application/json
 
 {
   "profileName": "My Retirement Plan",
-  "email": "user@example.com",
   "baseAge": 35,
   "startDate": "2026-01-01",
   "totalAssets": 100000,
@@ -87,7 +86,6 @@ Content-Type: application/json
   "governmentRetirementStartYears": 35,
   "governmentRetirementAdjustment": 0.03,
   "monthlyExpenseRecurring": 3000,
-  "rent": 1500,
   "oneTimeAnnualExpense": 5000,
   "annualInflation": 0.04
 }

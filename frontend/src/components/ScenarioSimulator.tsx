@@ -57,7 +57,6 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     yearsUntilSalaryEnds: getDateDisplay(profile.endOfSalaryYears || ''),
     yearsUntilGovRetirement: getDateDisplay(profile.governmentRetirementStartYears || ''),
     monthlyExpenses: profile.monthlyExpenseRecurring || 0,
-    monthlyRent: profile.rent || 0,
     oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
     monthlyReturnRate: profile.monthlyReturnRate || 0,
     investmentTaxRate: profile.investmentTaxRate || 0,
@@ -84,7 +83,6 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
     yearsUntilSalaryEnds: getDateDisplay(profile.endOfSalaryYears || ''),
     yearsUntilGovRetirement: getDateDisplay(profile.governmentRetirementStartYears || ''),
     monthlyExpenses: profile.monthlyExpenseRecurring || 0,
-    monthlyRent: profile.rent || 0,
     oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
     monthlyReturnRate: profile.monthlyReturnRate || 0,
     investmentTaxRate: profile.investmentTaxRate || 0,
@@ -319,7 +317,6 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       endOfSalaryYears: params.yearsUntilSalaryEnds,
       governmentRetirementStartYears: params.yearsUntilGovRetirement,
       monthlyExpenseRecurring: params.monthlyExpenses,
-      rent: params.monthlyRent,
       oneTimeAnnualExpense: params.oneTimeExpenses,
       monthlyReturnRate: params.monthlyReturnRate,
       investmentTaxRate: params.investmentTaxRate,
@@ -344,7 +341,6 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
       yearsUntilSalaryEnds: getDateDisplay(profile.endOfSalaryYears || ''),
       yearsUntilGovRetirement: getDateDisplay(profile.governmentRetirementStartYears || ''),
       monthlyExpenses: profile.monthlyExpenseRecurring || 0,
-      monthlyRent: profile.rent || 0,
       oneTimeExpenses: profile.oneTimeAnnualExpense || 0,
       monthlyReturnRate: profile.monthlyReturnRate || 0,
       investmentTaxRate: profile.investmentTaxRate || 0,
@@ -549,19 +545,6 @@ const ScenarioSimulator: React.FC<ScenarioSimulatorProps> = ({
                     onFocus={(e) => handleCurrencyFocus(e, 'monthlyExpenses')}
                     onBlur={() => handleCurrencyBlur('monthlyExpenses')}
                     name="monthlyExpenses"
-                    className="form-control"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="rent">Aluguel Mensal (R$)</label>
-                  <input
-                    id="rent"
-                    type="text"
-                    value={getCurrencyDisplay('monthlyRent', simulationParams.monthlyRent)}
-                    onChange={handleCurrencyChange}
-                    onFocus={(e) => handleCurrencyFocus(e, 'monthlyRent')}
-                    onBlur={() => handleCurrencyBlur('monthlyRent')}
-                    name="monthlyRent"
                     className="form-control"
                   />
                 </div>

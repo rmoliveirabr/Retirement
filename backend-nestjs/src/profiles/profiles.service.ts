@@ -36,9 +36,6 @@ export class ProfilesService {
         }
     }
 
-    async findByEmail(email: string): Promise<Profile[]> {
-        return this.profileModel.find({ email }).exec();
-    }
 
     async create(createProfileDto: CreateProfileDto, userId: string): Promise<Profile> {
         const createdProfile = new this.profileModel({
@@ -88,7 +85,6 @@ export class ProfilesService {
         const {
             _id,
             id: _virtualId,
-            email,
             createdAt,
             updatedAt,
             lastCalculation,

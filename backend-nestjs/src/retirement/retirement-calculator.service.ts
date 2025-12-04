@@ -131,7 +131,7 @@ export class RetirementCalculatorService {
         const investment = Math.max(0.0, profile.totalAssets - profile.fixedAssets);
 
         // monthly constants
-        const monthlyExpensesBase = profile.monthlyExpenseRecurring + profile.rent;
+        const monthlyExpensesBase = profile.monthlyExpenseRecurring;
         const monthlyReturnRate = profile.monthlyReturnRate;
         const investmentTaxRate = profile.investmentTaxRate;
         const investmentTaxablePercentage = profile.investmentTaxablePercentage || 1.0;
@@ -419,7 +419,7 @@ export class RetirementCalculatorService {
         const calculation = this.calculateRetirement(profile, expectedReturnRate);
 
         // Calculate current savings rate
-        const monthlyExpenses = profile.monthlyExpenseRecurring + profile.rent;
+        const monthlyExpenses = profile.monthlyExpenseRecurring;
         const monthlySavings = profile.monthlySalaryNet - monthlyExpenses;
         const savingsRate =
             profile.monthlySalaryNet > 0 ? monthlySavings / profile.monthlySalaryNet : 0;
@@ -453,12 +453,12 @@ export class RetirementCalculatorService {
             }
         }
 
-        const yearlyExpensesNow = (profile.monthlyExpenseRecurring + profile.rent) * 12.0;
+        const yearlyExpensesNow = profile.monthlyExpenseRecurring * 12.0;
         const bufferTarget = Math.max(1.0, yearlyExpensesNow * 2.0);
         const leftoverRatio = Math.max(0.0, Math.min(1.0, lastFinalValue / bufferTarget));
 
         // Calculate readiness score (0-100)
-        const monthlyExpensesTotal = profile.monthlyExpenseRecurring + profile.rent;
+        const monthlyExpensesTotal = profile.monthlyExpenseRecurring;
         const emergencyFundTarget = Math.max(monthlyExpensesTotal * 6, 1.0);
         const emergencyFundRatio = Math.min(1.0, profile.totalAssets / emergencyFundTarget);
 

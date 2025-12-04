@@ -1,7 +1,12 @@
 ## To Fix
+- Allow chat to create a profile if the user asks that a scenario becomes one 
+- When listing the profiles, show the profile name and the last update date
+- Remove the email from the profile
 - see how to show 'Ativos fixos', and allow it to be used as a backup for 'Ativos totais'
 - Review the healthyness of the profile using AI (cache and update only when the profile is changed)
 - Review "Projeções de Aposentadoria"
+- Allow users do add / remove money at some point in the timeline  
+- Allow users to add some income during some period in the timeline
 
 ## Pending
 - **Advanced Calculations**: Monte Carlo simulations, tax optimization

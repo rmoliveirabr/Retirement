@@ -40,11 +40,6 @@ export class ProfilesController {
         return profile;
     }
 
-    @Get('email/:email')
-    findByEmail(@Param('email') email: string, @CurrentUser() user: any) {
-        // This endpoint returns all profiles with this email for the current user
-        return this.profilesService.findByEmail(email);
-    }
 
     @Post()
     create(@Body() createProfileDto: CreateProfileDto, @CurrentUser() user: any) {

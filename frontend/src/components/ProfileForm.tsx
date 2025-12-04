@@ -15,7 +15,6 @@ interface ProfileFormProps {
 const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit, onCancel, isLoading = false }) => {
   const [formData, setFormData] = useState<ProfileCreate>({
     profileName: '',
-    email: '',
     baseAge: 30,
     startDate: '',
     governmentRetirementStartYears: '',
@@ -30,7 +29,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     endOfSalaryYears: '',
     governmentRetirementAdjustment: 0.03,
     monthlyExpenseRecurring: 0,
-    rent: 0,
     oneTimeAnnualExpense: 0,
     annualInflation: 0.03,
   });
@@ -45,7 +43,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
     if (profile) {
       setFormData({
         profileName: profile.profileName,
-        email: profile.email,
         startDate: getDateDisplay(profile.startDate ?? ''),
         baseAge: profile.baseAge,
         totalAssets: profile.totalAssets,
@@ -60,14 +57,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
         governmentRetirementStartYears: profile.governmentRetirementStartYears ?? '',
         governmentRetirementAdjustment: profile.governmentRetirementAdjustment,
         monthlyExpenseRecurring: profile.monthlyExpenseRecurring,
-        rent: profile.rent,
         oneTimeAnnualExpense: profile.oneTimeAnnualExpense,
         annualInflation: profile.annualInflation,
       });
     } else if (cloneData) {
       setFormData({
         profileName: cloneData.profileName + ' (Copy)',
-        email: '',
         baseAge: cloneData.baseAge,
         startDate: getDateDisplay(cloneData.startDate ?? ''),
         totalAssets: cloneData.totalAssets,
@@ -82,7 +77,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
         governmentRetirementStartYears: cloneData.governmentRetirementStartYears ?? '',
         governmentRetirementAdjustment: cloneData.governmentRetirementAdjustment,
         monthlyExpenseRecurring: cloneData.monthlyExpenseRecurring,
-        rent: cloneData.rent,
         oneTimeAnnualExpense: cloneData.oneTimeAnnualExpense,
         annualInflation: cloneData.annualInflation,
       });
@@ -118,9 +112,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Valid email is required';
-    }
 
     const baseAge = typeof formData.baseAge === 'string' ? parseInt(formData.baseAge || '0', 10) : formData.baseAge;
     if (isNaN(baseAge) || baseAge < 18 || baseAge > 100) {
@@ -172,9 +163,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
       newErrors.monthlyExpenseRecurring = 'Monthly expenses cannot be negative';
     }
 
-    if (formData.rent < 0) {
-      newErrors.rent = 'Rent cannot be negative';
-    }
 
     if (formData.oneTimeAnnualExpense < 0) {
       newErrors.oneTimeAnnualExpense = 'One-time annual expense cannot be negative';
@@ -586,19 +574,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                   {errors.profileName && <span className="error-message">{errors.profileName}</span>}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="email">Email *</label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className={errors.email ? 'error' : ''}
-                    required
-                  />
-                  {errors.email && <span className="error-message">{errors.email}</span>}
-                </div>
 
                 <div className="form-group">
                   <label htmlFor="startDate" className="label-with-icon">
@@ -775,21 +750,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ profile, cloneData, onSubmit,
                   {errors.monthlyExpenseRecurring && <span className="error-message">{errors.monthlyExpenseRecurring}</span>}
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="rent">Aluguel Mensal (R$)</label>
-                  <input
-                    type="text"
-                    id="rent"
-                    name="rent"
-                    value={getCurrencyDisplay('rent', formData.rent)}
-                    onChange={handleCurrencyChange}
-                    onFocus={(e) => handleCurrencyFocus(e, 'rent')}
-                    onBlur={() => handleCurrencyBlur('rent')}
-                    placeholder="0,00"
-                    className={errors.rent ? 'error' : ''}
-                  />
-                  {errors.rent && <span className="error-message">{errors.rent}</span>}
-                </div>
 
                 <div className="form-group">
                   <label htmlFor="oneTimeAnnualExpense" className="label-with-icon">

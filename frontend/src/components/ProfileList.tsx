@@ -78,12 +78,12 @@ const ProfileList: React.FC<ProfileListProps> = ({
           <div key={profile.id} className="profile-card">
             <div className="profile-header">
               <div className="email-block">
-                <div className="email-label">Email: {profile.email}</div>
+                <div className="email-label">{profile.profileName}</div>
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
                   <div className="age-badge">Idade: {profile.baseAge}</div>
-                  {profile.lastCalculation && (
+                  {profile.updatedAt && (
                     <span className="last-calc-date">
-                      📅 {formatDate(profile.lastCalculation)}
+                      📅 Atualizado: {formatDate(profile.updatedAt)}
                     </span>
                   )}
                 </div>
@@ -128,11 +128,11 @@ const ProfileList: React.FC<ProfileListProps> = ({
                 </div>
                 <div className="stat-item">
                   <span className="stat-label">Despesas Mensais</span>
-                  <span className="stat-value">{formatCurrency(profile.monthlyExpenseRecurring + profile.rent)}</span>
+                  <span className="stat-value">{formatCurrency(profile.monthlyExpenseRecurring)}</span>
                 </div>
                 <div className="stat-item">
                   <span className="stat-label">Poupança Mensal</span>
-                  <span className="stat-value savings">{formatCurrency(profile.monthlySalaryNet - (profile.monthlyExpenseRecurring + profile.rent))}</span>
+                  <span className="stat-value savings">{formatCurrency(profile.monthlySalaryNet - profile.monthlyExpenseRecurring)}</span>
                 </div>
               </div>
 

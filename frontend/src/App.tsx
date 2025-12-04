@@ -82,10 +82,6 @@ function App() {
   }, [user]); // Re-run when user changes
 
   const handleCreateProfile = async (profileData: ProfileCreate | ProfileUpdate) => {
-    // Type guard to ensure we have required fields for creation
-    if (!profileData.email) {
-      throw new Error('Email is required for profile creation');
-    }
     const createData = profileData as ProfileCreate;
     try {
       const newProfile = await profileApi.create(createData);
@@ -199,7 +195,6 @@ function App() {
       endOfSalaryYears: scenarioParams.yearsUntilSalaryEnds,
       governmentRetirementStartYears: scenarioParams.yearsUntilGovRetirement,
       monthlyExpenseRecurring: scenarioParams.monthlyExpenses,
-      rent: scenarioParams.monthlyRent,
       oneTimeAnnualExpense: scenarioParams.oneTimeExpenses,
       annualInflation: scenarioParams.annualInflation,
     });
@@ -222,7 +217,6 @@ function App() {
       setLoadingMessage("Salvando e recalculando...");
       // Save the profile to backend
       const savedProfile = await profileApi.update(selectedProfile.id, {
-        email: updatedProfile.email,
         baseAge: updatedProfile.baseAge,
         startDate: updatedProfile.startDate,
         totalAssets: updatedProfile.totalAssets,
@@ -237,7 +231,6 @@ function App() {
         investmentTaxablePercentage: updatedProfile.investmentTaxablePercentage,
         endOfSalaryYears: updatedProfile.endOfSalaryYears,
         monthlyExpenseRecurring: updatedProfile.monthlyExpenseRecurring,
-        rent: updatedProfile.rent,
         oneTimeAnnualExpense: updatedProfile.oneTimeAnnualExpense,
         annualInflation: updatedProfile.annualInflation,
       });

@@ -1,7 +1,6 @@
 export interface Profile {
   id: number;
   profileName: string;
-  email: string;
   lastCalculation?: string;
   startDate?: string;
   baseAge: number;
@@ -17,7 +16,6 @@ export interface Profile {
   investmentTaxablePercentage: number;
   endOfSalaryYears?: string;
   monthlyExpenseRecurring: number;
-  rent: number;
   oneTimeAnnualExpense: number;
   annualInflation: number;
   createdAt: string;
@@ -26,7 +24,6 @@ export interface Profile {
 
 export interface ProfileCreate {
   profileName: string;
-  email: string;
   baseAge: number;
   startDate?: string;
   governmentRetirementStartYears?: string;
@@ -41,13 +38,11 @@ export interface ProfileCreate {
   investmentTaxablePercentage: number;
   endOfSalaryYears?: string;
   monthlyExpenseRecurring: number;
-  rent: number;
   oneTimeAnnualExpense: number;
   annualInflation: number;
 }
 
 export interface ProfileUpdate {
-  email?: string;
   baseAge?: number;
   startDate?: string;
   governmentRetirementStartYears?: string;
@@ -62,7 +57,6 @@ export interface ProfileUpdate {
   investmentTaxablePercentage?: number;
   endOfSalaryYears?: string;
   monthlyExpenseRecurring?: number;
-  rent?: number;
   oneTimeAnnualExpense?: number;
   annualInflation?: number;
 }
@@ -101,7 +95,6 @@ export interface ScenarioRequest {
   expectedReturnRate?: number;
   retirementDurationYears?: number;
   targetAge?: number;
-  // Optional profile overrides
   startDate?: string;
   totalAssets?: number;
   fixedAssets?: number;
@@ -115,7 +108,6 @@ export interface ScenarioRequest {
   governmentRetirementStartYears?: string;
   governmentRetirementAdjustment?: number;
   monthlyExpenseRecurring?: number;
-  rent?: number;
   oneTimeAnnualExpense?: number;
   annualInflation?: number;
 }

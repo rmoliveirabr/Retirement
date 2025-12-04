@@ -43,12 +43,6 @@ export const profileApi = {
     return response.data;
   },
 
-  // Get profile by email
-  getByEmail: async (email: string): Promise<Profile> => {
-    const response = await api.get(`/api/profiles/email/${email}`);
-    return response.data;
-  },
-
   // Create new profile
   create: async (profile: ProfileCreate): Promise<Profile> => {
     const response = await api.post('/api/profiles', profile);
@@ -66,7 +60,7 @@ export const profileApi = {
     await api.delete(`/api/profiles/${id}`);
   },
 
-  // Clone profile (returns ProfileCreate data with empty email)
+  // Clone profile (returns ProfileCreate data)
   clone: async (id: number): Promise<ProfileCreate> => {
     const response = await api.get(`/api/profiles/${id}/clone`);
     return response.data;
@@ -99,6 +93,12 @@ export const askAI = async (question: string, profile: any, results: any[], hist
   const payload = { question, profile, results, history };
   const response = await api.post(`/api/ai/ask`, payload);
   return response.data; // { answer: "..." } 
+};
+
+export const getAiInsights = async (profile: any, results: any[]) => {
+  const payload = { profile, results };
+  const response = await api.post(`/api/ai/insights`, payload);
+  return response.data; // { insights: "..." }
 };
 
 export const getAiInfo = async (key: string, prompt: string, forceRefresh = false) => {

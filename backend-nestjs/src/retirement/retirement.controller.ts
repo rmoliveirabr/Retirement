@@ -17,7 +17,7 @@ export class RetirementController {
     async calculateRetirement(@Body() request: CalculationRequestDto) {
         console.log('[RetirementController] Calculate request received:', JSON.stringify(request, null, 2));
         const profile = await this.profilesService.findOne(request.profileId);
-        console.log('[RetirementController] Profile found:', profile.id, profile.email);
+        console.log('[RetirementController] Profile found:', profile.id);
         const result = await this.calculatorService.calculateRetirement(
             profile,
             request.expectedReturnRate ?? 0.07,
@@ -70,7 +70,6 @@ export class RetirementController {
             scenarioProfile.governmentRetirementAdjustment = request.governmentRetirementAdjustment;
         if (request.monthlyExpenseRecurring !== undefined)
             scenarioProfile.monthlyExpenseRecurring = request.monthlyExpenseRecurring;
-        if (request.rent !== undefined) scenarioProfile.rent = request.rent;
         if (request.oneTimeAnnualExpense !== undefined)
             scenarioProfile.oneTimeAnnualExpense = request.oneTimeAnnualExpense;
         if (request.annualInflation !== undefined)

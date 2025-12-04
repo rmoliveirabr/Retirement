@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RetirementCalculation, RetirementReadiness, Profile } from '../types';
 import { formatBrazilianCurrency } from '../utils/currency';
 import ScenarioSimulator from './ScenarioSimulator';
-import { askAI } from "../services/api";
+import { askAI, getAiInsights } from "../services/api";
 import './RetirementResults.css';
 
 import ReactMarkdown from "react-markdown";
@@ -53,6 +53,9 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
   };
 
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+
+  // Use currentCalculation or fall back to calculation prop
+  const activeCalculation = currentCalculation || calculation;
 
   // handle ask to AI
   const handleAskAI = async () => {
@@ -118,9 +121,6 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
     return 'Ruim';
   };
 
-  // Use currentCalculation or fall back to calculation prop
-  const activeCalculation = currentCalculation || calculation;
-
   // Compute coverage metrics from the timeline
   const timeline: any[] = (activeCalculation?.assumptions.timeline as any[]) || [];
   const depletionIndex = timeline.findIndex((row: any) => row.final_value < 0);
@@ -176,7 +176,7 @@ const RetirementResults: React.FC<RetirementResultsProps> = ({ calculation, read
         <div className="results-header">
           <div>
             <h2>Resultados da Análise de Aposentadoria</h2>
-            <p className="results-subtitle">Projeções abrangentes de planejamento de aposentadoria para {profile?.email || 'seu perfil'}</p>
+            <p className="results-subtitle">Projeções abrangentes de planejamento de aposentadoria para {profile?.profileName || 'seu perfil'}</p>
           </div>
           <button className="close-btn" onClick={onClose} aria-label="Close">×</button>
         </div>

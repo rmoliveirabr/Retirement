@@ -106,7 +106,6 @@ export class ScenarioRequestDto {
     @IsNumber()
     @Min(0)
     @Type(() => Number)
-    rent?: number;
 
     @IsOptional()
     @IsNumber()

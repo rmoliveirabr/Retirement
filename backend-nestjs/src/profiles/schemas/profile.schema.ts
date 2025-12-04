@@ -12,9 +12,6 @@ export class Profile {
     profileName: string;
 
     @Prop({ required: true })
-    email: string;
-
-    @Prop({ required: true })
     baseAge: number;
 
     @Prop()
@@ -55,9 +52,6 @@ export class Profile {
 
     @Prop({ required: true, default: 0 })
     monthlyExpenseRecurring: number;
-
-    @Prop({ required: true, default: 0 })
-    rent: number;
 
     @Prop({ required: true, default: 0 })
     oneTimeAnnualExpense: number;

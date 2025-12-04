@@ -1,6 +1,5 @@
 export interface Profile {
     id: string;
-    email: string;
     baseAge: number;
     startDate?: string;
     totalAssets: number;
@@ -15,7 +14,6 @@ export interface Profile {
     governmentRetirementStartYears?: string;
     governmentRetirementAdjustment: number;
     monthlyExpenseRecurring: number;
-    rent: number;
     oneTimeAnnualExpense: number;
     annualInflation: number;
     lastCalculation?: Date;
